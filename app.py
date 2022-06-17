@@ -1,11 +1,7 @@
-from operator import index
-from turtle import color, width
 import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import tkinter
-import time
 plt.rcParams['font.sans-serif'] = ['simhei']
 
 #定义功能
