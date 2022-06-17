@@ -3,4 +3,3 @@ matplotlib
 tk
 streamlit
 pandas
-turtle
