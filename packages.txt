@@ -1,2 +1,2 @@
  fonts-wqy-microhei fonts-wqy-zenhei
- font-simhei
+ ibus-libpinyin
