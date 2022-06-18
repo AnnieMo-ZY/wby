@@ -1,3 +1,2 @@
-default-jre
-chinese
-fonts-unfonts-core
+# sudo apt-get install language-pack-zh*
+# sudo apt-get install chinese*
