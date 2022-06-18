@@ -115,7 +115,7 @@ def main(user_input, dataframe):
                  fontsize=16, fontweight='bold', 
                  color='grey') 
     #plt.show()
-    figure = st.pyplot(fig=plot, clear_figure=None)
+    figure = st.pyplot(fig=fig, clear_figure=None)
     return figure , df 
 
 st.title('🌎Excel小工具')
