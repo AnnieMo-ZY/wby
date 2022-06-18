@@ -1,2 +1,1 @@
  fonts-wqy-microhei fonts-wqy-zenhei
- ibus-libpinyin
