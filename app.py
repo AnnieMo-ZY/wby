@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from PIL import Image
-plt.rcParams['font.sans-serif'] = ['simhei']
 
+
+plt.rcParams['font.sans-serif'] = ['simhei']
 #定义功能
 
 # 选择搜索范围
@@ -161,5 +161,3 @@ with st.sidebar:
     st.write('2: 选中对应平台/关键词')
     st.write('3: 输入关键词+Enter') 
 
-    # image = Image.open('C:/Users/HFY/Desktop/streamlit/11.jpeg')
-    # st.image(image, caption='')
