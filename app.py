@@ -96,6 +96,7 @@ def main(user_input, dataframe):
 
     #图像大小 figsize
     fig, ax = plt.subplots(figsize = (13,8)) 
+    plt.rcParams['font.sans-serif'] = ['simhei']
 
     #数据 x,y轴
     x = list(sorted_d.keys())
