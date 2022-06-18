@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-plt.rcParams['font.family'] = ['zenhei']
+plt.rcParams['font.family'] = ['simhei']
 
 #定义功能
 
