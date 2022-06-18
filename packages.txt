@@ -1,3 +1,2 @@
  fonts-wqy-microhei fonts-wqy-zenhei
- language-pack-zh*
- chinese*
+ font-simhei
