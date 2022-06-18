@@ -1,2 +1,3 @@
-language-pack-zh*
-chinese*
+default-jre
+chinese
+fonts-unfonts-core
