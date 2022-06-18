@@ -115,8 +115,8 @@ def main(user_input, dataframe):
                  fontsize=16, fontweight='bold', 
                  color='grey') 
     #plt.show()
-
-    return st.pyplot(fig=plot, clear_figure=None) ,df ,x ,y
+    figure = st.pyplot(fig=plot, clear_figure=None)
+    return figure , df 
 
 st.title('🌎Excel小工具')
 uploaded_file = st.file_uploader(label="上传Excel文件" , type = ['csv','xlsx','xls'] )
@@ -144,7 +144,7 @@ if uploaded_file is not None:
 # 结果
     if user_input:
         try:
-            plot ,df,x,y = main(user_input,dataframe)
+            plot,df= main(user_input,dataframe)
         # 渲染
         except:
             st.write('请检查Excel表格列名')
