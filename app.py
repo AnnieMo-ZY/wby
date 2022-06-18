@@ -2,9 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
-
 plt.rcParams['font.sans-serif'] = ['simhei']
+
 #定义功能
 
 # 选择搜索范围
@@ -117,7 +116,7 @@ def main(user_input, dataframe):
                  color='grey') 
     #plt.show()
 
-    return fig,df ,x ,y
+    return st.pyplot(fig=plot, clear_figure=None) ,df ,x ,y
 
 st.title('🌎Excel小工具')
 uploaded_file = st.file_uploader(label="上传Excel文件" , type = ['csv','xlsx','xls'] )
@@ -150,7 +149,7 @@ if uploaded_file is not None:
         except:
             st.write('请检查Excel表格列名')
 
-        st.pyplot(fig=plot, clear_figure=None)
+        #st.pyplot(fig=plot, clear_figure=None)
         st.dataframe(df)
 
 
@@ -161,3 +160,5 @@ with st.sidebar:
     st.write('2: 选中对应平台/关键词')
     st.write('3: 输入关键词+Enter') 
 
+    # image = Image.open('C:/Users/HFY/Desktop/streamlit/11.jpeg')
+    # st.image(image, caption='')
