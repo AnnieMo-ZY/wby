@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-plt.rcParams['font.sans-serif'] = ['simhei']
+plt.rcParams['font.family'] = ['SimHei']
 
 #定义功能
 
@@ -96,7 +96,6 @@ def main(user_input, dataframe):
 
     #图像大小 figsize
     fig, ax = plt.subplots(figsize = (13,8)) 
-    plt.rcParams['font.sans-serif'] = ['simhei']
 
     #数据 x,y轴
     x = list(sorted_d.keys())
@@ -105,10 +104,10 @@ def main(user_input, dataframe):
     ax.barh(x, y, height=0.6,alpha=0.8,fill=True,color = '#FFDAB9') 
 
     #size 调整字体大小
-    plt.yticks(size=20)
+    plt.yticks(size=20,fontproperties = 'SimHei')
     #size 调整字体大小
-    plt.xticks(size=20)
-    plt.title('发文数数量' ,size=20)
+    plt.xticks(size=20,fontproperties = 'SimHei')
+    plt.title('发文数数量',fontproperties = 'SimHei' ,size=20)
     #标记y轴数量
     for i in ax.patches:
         plt.text(i.get_width()+0.2, i.get_y()+0.2, 
