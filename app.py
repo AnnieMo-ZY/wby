@@ -138,8 +138,8 @@ if uploaded_file is not None:
 
         df= pd.DataFrame(main_result_jason)
         bars = alt.Chart(df).mark_bar().encode(
-            y=alt.Y('关键词'),
-            x=alt.X('数量')).properties( height = 400)
+            y=alt.Y('关键词',sort = '-x'),
+            x=alt.X('数量:Q' )).properties( height = 400)
 
         st.altair_chart(bars, use_container_width=True)
         st.dataframe(df)
