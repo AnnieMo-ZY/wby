@@ -127,17 +127,19 @@ if uploaded_file is not None:
     if user_input:
         try:
             x,y,df =main(user_input,dataframe)
+            print(x)
+            print(y)
         
         # 渲染
         except:
             st.write('请检查Excel表格列名')
 
-        main_result_jason = {'关键词': x, '数量':y}
+        main_result_jason = {'关键词': x, '数量':[int(i) for i in y]}
 
         df= pd.DataFrame(main_result_jason)
         bars = alt.Chart(df).mark_bar().encode(
-            x=alt.X('关键词'),
-            y=alt.Y('数量',sort = 'y'))
+            y=alt.Y('关键词'),
+            x=alt.X('数量')).properties( height = 400)
 
         st.altair_chart(bars, use_container_width=True)
         st.dataframe(df)
