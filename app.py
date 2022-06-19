@@ -94,33 +94,11 @@ def main(user_input, dataframe):
     #占比 保留 1位小数 %
     df.round({'占比%' : 1})
 
-
-    #图像大小 figsize
-    fig, ax = plt.subplots(figsize = (13,8)) 
-
     #数据 x,y轴
     x = list(sorted_d.keys())
     y = list(sorted_d.values())
-    #柱状图
-    ax.barh(x, y, height=0.6,alpha=0.8,fill=True,color = '#FFDAB9') 
 
-    plt.yticks(size=20)
-    #size 调整字体大小
-    plt.xticks(size=20)
-    plt.title('关键词发文数量', size = 20)
-
-    #标记y轴数量
-    for i in ax.patches:
-        plt.text(i.get_width()+0.2, i.get_y()+0.2, 
-                 str(round((i.get_width()), 2)), 
-                 fontsize=16, fontweight='bold', 
-                 color='grey') 
-    #plt.show()
-
-    st.subheader('关键词发文数量')
-    st.pyplot(fig=fig, clear_figure=None)
-    st.dataframe(df)
-    return x , y
+    return x , y, df
 
 st.title('🌎Excel小工具')
 uploaded_file = st.file_uploader(label="上传Excel文件" , type = ['csv','xlsx','xls'] )
@@ -148,7 +126,7 @@ if uploaded_file is not None:
 # 结果
     if user_input:
         try:
-            x,y =main(user_input,dataframe)
+            x,y,df =main(user_input,dataframe)
         
         # 渲染
         except:
@@ -162,6 +140,7 @@ if uploaded_file is not None:
             y=alt.Y('数量',sort = 'y'))
 
         st.altair_chart(bars, use_container_width=True)
+        st.dataframe(df)
 
 
 with st.sidebar:
