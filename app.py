@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-plt.rcParams['font.family'] = ['Times']
+import altair as alt
+#plt.rcParams['font.family'] = ['SimHei']
 
 #定义功能
 
@@ -17,10 +18,10 @@ def select_data(dataframe,keyword,platform): #dataframe , keyword:str, platform:
     return dataframe.reset_index()
 
 # 情感分析模块
-def emotion_check(post):
-    snownlp = SnowNLP(post)
-    sentiments_score = snownlp.sentiments
-    return sentiments_score
+# def emotion_check(post):
+#     snownlp = SnowNLP(post)
+#     sentiments_score = snownlp.sentiments
+#     return sentiments_score
 
 # 搜索逻辑模块
 def main(user_input, dataframe):
@@ -61,7 +62,7 @@ def main(user_input, dataframe):
             count = content['辅助列'].sum()
         d[mulitiple_word]  = count
         #打印结果
-        print(f'关键词:{mulitiple_word} \t 数量：{count} \t 占比: {(count/posts_length) * 100 :.2f}%')
+        #print(f'关键词:{mulitiple_word} \t 数量：{count} \t 占比: {(count/posts_length) * 100 :.2f}%')
 
     #AND 逻辑
     for mulitiple_word in ls2:
@@ -84,9 +85,9 @@ def main(user_input, dataframe):
             #取标记为1的sum
         d[mulitiple_word]  = word_count
         #打印结果
-        print(f'关键词:{mulitiple_word} \t 数量：{word_count} \t 占比: {(word_count/posts_length) * 100 :.2f}%')
+        #print(f'关键词:{mulitiple_word} \t 数量：{word_count} \t 占比: {(word_count/posts_length) * 100 :.2f}%')
 
-    print('*' * 50)
+    #print('*' * 50)
     sorted_d = dict(sorted(d.items(), key=lambda x: x[1],reverse =False))
     df = pd.DataFrame(list(sorted_d.items()) ,columns=['关键词','发文数量'])
     df.loc[:,'占比%'] =df['发文数量'] /posts_length * 100 
@@ -103,11 +104,11 @@ def main(user_input, dataframe):
     #柱状图
     ax.barh(x, y, height=0.6,alpha=0.8,fill=True,color = '#FFDAB9') 
 
+    plt.yticks(size=20)
     #size 调整字体大小
-    plt.yticks(size=20,fontproperties = 'SimHei')
-    #size 调整字体大小
-    plt.xticks(size=20,fontproperties = 'SimHei')
-    plt.title('发文数数量',fontproperties = 'SimHei' ,size=20)
+    plt.xticks(size=20)
+    plt.title('关键词发文数量', size = 20)
+
     #标记y轴数量
     for i in ax.patches:
         plt.text(i.get_width()+0.2, i.get_y()+0.2, 
@@ -115,8 +116,11 @@ def main(user_input, dataframe):
                  fontsize=16, fontweight='bold', 
                  color='grey') 
     #plt.show()
-    figure = st.pyplot(fig=fig, clear_figure=None)
-    return figure , df 
+
+    st.subheader('关键词发文数量')
+    st.pyplot(fig=fig, clear_figure=None)
+    st.dataframe(df)
+    return x , y
 
 st.title('🌎Excel小工具')
 uploaded_file = st.file_uploader(label="上传Excel文件" , type = ['csv','xlsx','xls'] )
@@ -144,21 +148,31 @@ if uploaded_file is not None:
 # 结果
     if user_input:
         try:
-            plot,df= main(user_input,dataframe)
+            x,y =main(user_input,dataframe)
+        
         # 渲染
         except:
             st.write('请检查Excel表格列名')
 
         #st.pyplot(fig=plot, clear_figure=None)
-        st.dataframe(df)
+        #st.dataframe(df)
+        dd = {'col': x, 'value':y}
 
+        df= pd.DataFrame(dd)
+        bars = alt.Chart(df).mark_bar().encode(
+            
+            x=alt.X('col',sort = '-x'),
+            y=alt.Y('value',sort = '-x')
+        )
+
+
+        st.altair_chart(bars, use_container_width=True)
 
 
 with st.sidebar:
-    st.subheader('🌟小功能使用步骤') 
+    st.subheader('🌟使用步骤') 
     st.write('1: 传入Excel 文件')
     st.write('2: 选中对应平台/关键词')
-    st.write('3: 输入关键词+Enter') 
-
+    st.write('3: 输入关键词+Enter')
     # image = Image.open('C:/Users/HFY/Desktop/streamlit/11.jpeg')
     # st.image(image, caption='')
