@@ -154,17 +154,12 @@ if uploaded_file is not None:
         except:
             st.write('请检查Excel表格列名')
 
-        #st.pyplot(fig=plot, clear_figure=None)
-        #st.dataframe(df)
-        dd = {'col': x, 'value':y}
+        main_result_jason = {'关键词': x, '数量':y}
 
-        df= pd.DataFrame(dd)
+        df= pd.DataFrame(main_result_jason)
         bars = alt.Chart(df).mark_bar().encode(
-            
-            x=alt.X('col',sort = '-x'),
-            y=alt.Y('value',sort = '-x')
-        )
-
+            x=alt.X('关键词'),
+            y=alt.Y('数量',sort = 'y'))
 
         st.altair_chart(bars, use_container_width=True)
 
