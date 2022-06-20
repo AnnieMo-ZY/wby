@@ -6,7 +6,10 @@ import altair as alt
 #plt.rcParams['font.family'] = ['SimHei']
 
 #定义功能
-
+@st.cache
+def convert_df(df):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    return df.to_csv()
 # 选择搜索范围
 def select_data(dataframe,keyword,platform): #dataframe , keyword:str, platform:str
     if platform == 'All':
@@ -101,14 +104,14 @@ def main(user_input, dataframe):
     return x , y, df
 
 st.title('🌎Excel小工具')
-uploaded_file = st.file_uploader(label="上传Excel文件" , type = ['csv','xlsx','xls'] )
-col1 , col2, col3 = st.columns(3)
-if uploaded_file is not None:
+uploaded_file = st.file_uploader(label="上传Excel文件" , type = ['csv','xlsx','xls'],accept_multiple_files=True )
 
-    if str(uploaded_file.type).split('/')[1] =='csv':
-        dataframe = pd.read_csv(uploaded_file)
+col1 , col2, col3 = st.columns(3)
+if len(uploaded_file) > 0:
+    if str(uploaded_file[0].type).split('/')[1] =='csv':
+        dataframe = pd.read_csv(uploaded_file[0])
     else:
-        dataframe = pd.read_excel(uploaded_file,dtype = str,index_col = False)
+        dataframe = pd.read_excel(uploaded_file[0],dtype = str,index_col = False)
 
     selected_keyword = list(dataframe['关键词'].unique())
     selected_platform = list(dataframe['平台类型'].unique())
@@ -152,3 +155,15 @@ with st.sidebar:
     st.write('3: 输入关键词+Enter')
     # image = Image.open('C:/Users/HFY/Desktop/streamlit/11.jpeg')
     # st.image(image, caption='')
+    if len(uploaded_file)>0:
+        files_ls = [pd.read_excel(file) for file in uploaded_file]
+
+        concat_data = pd.concat(files_ls,sort=True)
+
+        csv = convert_df(concat_data)
+
+        st.download_button(
+            label="下载合并文件 as CSV",
+            data=csv,
+            file_name='combined_file.csv',)
+
