@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import altair as alt
-#plt.rcParams['font.family'] = ['SimHei']
 
 #定义功能
 @st.cache
@@ -11,6 +10,7 @@ def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
     return df.to_csv()
 # 选择搜索范围
+@st.cache
 def select_data(dataframe,keyword,platform): #dataframe , keyword:str, platform:str
     if platform == 'All':
         pass
@@ -155,15 +155,15 @@ with st.sidebar:
     st.write('3: 输入关键词+Enter')
     # image = Image.open('C:/Users/HFY/Desktop/streamlit/11.jpeg')
     # st.image(image, caption='')
-    if len(uploaded_file)>0:
-        files_ls = [pd.read_excel(file) for file in uploaded_file]
+#     if len(uploaded_file)>0:
+#         files_ls = [pd.read_excel(file) for file in uploaded_file]
 
-        concat_data = pd.concat(files_ls,sort=True)
+#         concat_data = pd.concat(files_ls,sort=True)
 
-        csv = convert_df(concat_data)
+#         csv = convert_df(concat_data)
 
-        st.download_button(
-            label="下载合并文件 as CSV",
-            data=csv,
-            file_name='combined_file.csv',)
+#         st.download_button(
+#             label="下载合并文件 as CSV",
+#             data=csv,
+#             file_name='combined_file.csv',)
 
