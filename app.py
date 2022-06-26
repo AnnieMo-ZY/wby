@@ -10,11 +10,6 @@ def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
     return df.to_csv()
 # 选择搜索范围
-@st.cache
-def upload_file():
-    uploaded_file = st.file_uploader(label="上传Excel文件" , type = ['csv','xlsx','xls'],accept_multiple_files=True )
-    return uploaded_file
-
 def select_data(dataframe,keyword,platform): #dataframe , keyword:str, platform:str
     if platform == 'All':
         pass
@@ -108,7 +103,7 @@ def main(user_input, dataframe):
     return x , y, df
 
 st.title('🌎Excel小工具')
-uploaded_file = upload_file()
+uploaded_file = st.file_uploader(label="上传Excel文件" , type = ['csv','xlsx','xls'],accept_multiple_files=True )
 col1 , col2, col3 = st.columns(3)
 if len(uploaded_file) > 0:
     if str(uploaded_file[0].type).split('/')[1] =='csv':
