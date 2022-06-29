@@ -4,6 +4,30 @@ import numpy as np
 import matplotlib.pyplot as plt
 import altair as alt
 
+
+def merge(df_ls):
+    defined_columns = ["平台类型","identify_id",'分类',"media_id","media_url","标题","内容","文章创建时间"
+                   ,"关键词","account_id","性别","地域","账号名称","简介","认证原因","主页链接","粉丝数","产品线","微闪投"
+                  ,"上架状态","账号分类","是否命中" ]
+    
+    files = []
+    for df in df_ls:
+        copy_df = df.copy() #使用备份 不在源数据更改 可重复运行
+        copy_df=copy_df[defined_columns]
+        #更改列名
+        if '是否微闪投' in copy_df.columns:
+            copy_df.rename(columns={"是否微闪投" : "微闪投"}, inplace = True)
+        if '是否是精确搜索' in copy_df.columns:
+            copy_df.rename(columns={"是否是精确搜索" : "是否命中"}, inplace = True)  
+            
+        files.append(copy_df)
+    
+    final = pd.concat([pd.DataFrame(i) for i in files])
+    
+    return final
+
+
+
 #定义功能
 @st.cache
 def convert_df(df):
@@ -38,6 +62,7 @@ def main(user_input, dataframe):
         else:
             ls2.append(word)
     d={}
+
     # FOR循环 遍历word_list的词
     for mulitiple_word in ls1:
         d.update({mulitiple_word:0})
@@ -63,7 +88,6 @@ def main(user_input, dataframe):
             #取标记为1的sum
             count = content['辅助列'].sum()
         d[mulitiple_word]  = count
-        #打印结果
         #print(f'关键词:{mulitiple_word} \t 数量：{count} \t 占比: {(count/posts_length) * 100 :.2f}%')
 
     #AND 逻辑
@@ -86,10 +110,10 @@ def main(user_input, dataframe):
                     continue
             #取标记为1的sum
         d[mulitiple_word]  = word_count
-        #打印结果
+
         #print(f'关键词:{mulitiple_word} \t 数量：{word_count} \t 占比: {(word_count/posts_length) * 100 :.2f}%')
 
-    #print('*' * 50)
+
     sorted_d = dict(sorted(d.items(), key=lambda x: x[1],reverse =False))
     df = pd.DataFrame(list(sorted_d.items()) ,columns=['关键词','发文数量'])
     df.loc[:,'占比%'] =df['发文数量'] /posts_length * 100 
@@ -103,9 +127,36 @@ def main(user_input, dataframe):
     return x , y, df
 
 st.title('🌎Excel小工具')
-uploaded_file = st.file_uploader(label="上传Excel文件" , type = ['csv','xlsx','xls'],accept_multiple_files=True )
+uploaded_file = st.file_uploader(label="上传Excel文件" , type = ['csv','xlsx'],accept_multiple_files=True )
+
+#合并文件
+if len(uploaded_file) > 1:
+    for index, item  in enumerate(uploaded_file):
+        df_ls = []
+        if str(item.name).split('.')[1] == 'csv':
+            df_csv = pd.read_csv(uploaded_file[index]) #encoding='gb18030'
+            st.write('csv读取成功')
+            df_ls.append(df_csv)
+        if str(item.name).split('.')[1] == 'xlsx':
+            df_xls = pd.read_excel(uploaded_file[index])
+            st.write('xlsx读取成功')
+            df_ls.append(df_xls)
+
+    concat_data = merge(df_ls)
+    csv = convert_df(concat_data)
+
+    st.download_button(
+        label="下载合并文件 as CSV",
+        data=csv,
+        file_name='combined_file.csv',)
+
+
+
+
+
+
 col1 , col2, col3 = st.columns(3)
-if len(uploaded_file) > 0:
+if len(uploaded_file) == 1:
     if str(uploaded_file[0].type).split('/')[1] =='csv':
         dataframe = pd.read_csv(uploaded_file[0])
     else:
@@ -128,10 +179,7 @@ if len(uploaded_file) > 0:
     if user_input:
         try:
             x,y,df =main(user_input,dataframe)
-            print(x)
-            print(y)
-        
-        # 渲染
+
         except:
             st.write('请检查Excel表格列名')
 
@@ -153,15 +201,16 @@ with st.sidebar:
     st.write('3: 输入关键词+Enter')
     # image = Image.open('C:/Users/HFY/Desktop/streamlit/11.jpeg')
     # st.image(image, caption='')
-#     if len(uploaded_file)>0:
-#         files_ls = [pd.read_excel(file) for file in uploaded_file]
 
-#         concat_data = pd.concat(files_ls,sort=True)
+    # if len(uploaded_file)>0:
+    #     files_ls = [pd.read_excel(file) for file in uploaded_file]
 
-#         csv = convert_df(concat_data)
+    #     concat_data = pd.concat(files_ls,sort=True)
 
-#         st.download_button(
-#             label="下载合并文件 as CSV",
-#             data=csv,
-#             file_name='combined_file.csv',)
+    #     csv = convert_df(concat_data)
+
+    #     st.download_button(
+    #         label="下载合并文件 as CSV",
+    #         data=csv,
+    #         file_name='combined_file.csv',)
 
