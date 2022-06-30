@@ -134,7 +134,7 @@ if len(uploaded_file) > 1:
     for index, item  in enumerate(uploaded_file):
         df_ls = []
         if str(item.name).split('.')[1] == 'csv':
-            df_csv = pd.read_csv(uploaded_file[index]) #encoding='gb18030'
+            df_csv = pd.read_csv(uploaded_file[index], encoding = 'gb18030') #encoding='gb18030'
             st.write('csv读取成功')
             df_ls.append(df_csv)
         if str(item.name).split('.')[1] == 'xlsx':
