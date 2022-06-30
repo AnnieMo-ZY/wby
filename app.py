@@ -140,15 +140,14 @@ if len(uploaded_file) > 1:
     for index, item  in enumerate(uploaded_file):
         df_ls = []
         if str(item.name).split('.')[1] == 'csv':
-            df_csv = pd.read_csv(uploaded_file[index], encoding = 'gb18030') #encoding='gb18030'
+            df = pd.read_csv(uploaded_file[index], encoding = 'gb18030') #encoding='gb18030'
             st.write('csv读取成功')
-            df_ls.append(df_csv)
-        elif str(item.name).split('.')[1] == 'xlsx':
-            df_xls = pd.read_excel(uploaded_file[index])
+        if str(item.name).split('.')[1] == 'xlsx':
+            df = pd.read_excel(uploaded_file[index])
             st.write('xlsx读取成功')
-            df_ls.append(df_xls)
+        
+        df_ls.append(df)
             
-        st.write(f'共{len(df_ls)}个文件')
      
     try:
         concat_data = merge(df_ls)
