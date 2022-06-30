@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import altair as alt
+import time
 
 def merge(df_ls):
     defined_columns = ["平台类型","identify_id",'分类',"media_id","media_url","标题","内容","文章创建时间"
@@ -130,10 +131,12 @@ def main(user_input, dataframe):
     return x , y, df
 
 st.title('🌎Excel小工具')
-uploaded_file = st.file_uploader(label="上传Excel文件" , type = ['csv','xlsx'],accept_multiple_files=True )
 
+uploaded_file = st.file_uploader(label="上传Excel文件" , type = ['csv','xlsx'],accept_multiple_files=True )
+time.sleep(2)
 #合并文件
 if len(uploaded_file) > 1:
+    time.sleep(3)
     for index, item  in enumerate(uploaded_file):
         df_ls = []
         if str(item.name).split('.')[1] == 'csv':
