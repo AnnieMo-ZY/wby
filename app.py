@@ -34,9 +34,11 @@ def merge(df_ls):
 
 #定义功能
 
+@st.cache
 def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    return df.to_csv(index=False,encoding = 'utf-8')
+    return df.to_csv(encoding = 'utf_8_sig', line_terminator="\n", index = False).encode('utf_8_sig')
+
 # 选择搜索范围
 def select_data(dataframe,keyword,platform): #dataframe , keyword:str, platform:str
     if platform == 'All':
@@ -163,7 +165,8 @@ if len(uploaded_file) > 1:
     st.download_button(
         label="下载合并文件 as CSV",
         data=csv,
-        file_name='combined_file.csv',)
+        file_name='combined_file.csv',
+        mime = 'text/csv')
 
 
 
