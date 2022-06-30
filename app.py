@@ -143,11 +143,12 @@ if len(uploaded_file) > 1:
             df_csv = pd.read_csv(uploaded_file[index], encoding = 'gb18030') #encoding='gb18030'
             st.write('csv读取成功')
             df_ls.append(df_csv)
-        if str(item.name).split('.')[1] == 'xlsx':
+        elif str(item.name).split('.')[1] == 'xlsx':
             df_xls = pd.read_excel(uploaded_file[index])
             st.write('xlsx读取成功')
             df_ls.append(df_xls)
             
+        st.write(f'共{len(df_ls)}个文件')
      
     try:
         concat_data = merge(df_ls)
