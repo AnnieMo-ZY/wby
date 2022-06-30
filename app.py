@@ -4,29 +4,32 @@ import numpy as np
 import matplotlib.pyplot as plt
 import altair as alt
 
-
 def merge(df_ls):
     defined_columns = ["平台类型","identify_id",'分类',"media_id","media_url","标题","内容","文章创建时间"
                    ,"关键词","account_id","性别","地域","账号名称","简介","认证原因","主页链接","粉丝数","产品线","微闪投"
-                  ,"上架状态","账号分类","是否命中" ]
-    
+                  ,"上架状态","账号分类","短视频转发数","短视频评论数","短视频点赞数","是否命中"]
     files = []
     for df in df_ls:
         copy_df = df.copy() #使用备份 不在源数据更改 可重复运行
-        copy_df=copy_df[defined_columns]
+        for col in copy_df.columns:
         #更改列名
-        if '是否微闪投' in copy_df.columns:
-            copy_df.rename(columns={"是否微闪投" : "微闪投"}, inplace = True)
-        if '是否是精确搜索' in copy_df.columns:
-            copy_df.rename(columns={"是否是精确搜索" : "是否命中"}, inplace = True)  
-            
+            if '是否微闪投' in col:
+                copy_df.rename(columns={"是否微闪投" : "微闪投"}, inplace = True)
+            if '是否是精确搜索' in col:
+                copy_df.rename(columns={"是否是精确搜索" : "是否命中"}, inplace = True) 
+            if 'red_id' in col:
+                copy_df.rename(columns={"red_id" : "account_id"}, inplace = True)
+            if '账号简介' in col:
+                copy_df.rename(columns={"账号简介" : "简介"}, inplace = True)
+       
+        #不存在的列名补齐
+        for d in defined_columns:
+            if d not in list(copy_df.columns):
+                copy_df.insert(copy_df.shape[1], column = d, value ='null')
+        copy_df = copy_df[defined_columns]
         files.append(copy_df)
-    
     final = pd.concat([pd.DataFrame(i) for i in files])
-    
     return final
-
-
 
 #定义功能
 @st.cache
@@ -141,9 +144,13 @@ if len(uploaded_file) > 1:
             df_xls = pd.read_excel(uploaded_file[index])
             st.write('xlsx读取成功')
             df_ls.append(df_xls)
-      
+            
+     
     try:
         concat_data = merge(df_ls)
+        concat_data.fillna({'粉丝数':0},inplace =True)
+        concat_data.fillna('null',inplace =True)
+        
     except Exception as e:
         st.write('检查列名')
         st.write(str(e))
