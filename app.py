@@ -36,7 +36,7 @@ def merge(df_ls):
 
 def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    return df.to_csv()
+    return df.to_csv(index=False)
 # 选择搜索范围
 def select_data(dataframe,keyword,platform): #dataframe , keyword:str, platform:str
     if platform == 'All':
