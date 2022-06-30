@@ -141,8 +141,12 @@ if len(uploaded_file) > 1:
             df_xls = pd.read_excel(uploaded_file[index])
             st.write('xlsx读取成功')
             df_ls.append(df_xls)
-
-    concat_data = merge(df_ls)
+      
+    try:
+        concat_data = merge(df_ls)
+    except Exception as e:
+        st.write('检查列名')
+        st.write(str(e))
     csv = convert_df(concat_data)
 
     st.download_button(
