@@ -133,12 +133,12 @@ def main(user_input, dataframe):
 st.title('🌎Excel小工具')
 
 uploaded_file = st.file_uploader(label="上传Excel文件" , type = ['csv','xlsx'],accept_multiple_files=True )
-time.sleep(2)
+time.sleep(1)
 #合并文件
 if len(uploaded_file) > 1:
-    time.sleep(3)
+    time.sleep(1)
+    df_ls = []
     for index, item  in enumerate(uploaded_file):
-        df_ls = []
         if str(item.name).split('.')[1] == 'csv':
             df = pd.read_csv(uploaded_file[index], encoding = 'gb18030') #encoding='gb18030'
             st.write('csv读取成功')
