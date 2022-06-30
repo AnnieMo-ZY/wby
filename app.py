@@ -142,7 +142,7 @@ if len(uploaded_file) > 1:
         if str(item.name).split('.')[1] == 'csv':
             df = pd.read_csv(uploaded_file[index], encoding = 'gb18030') #encoding='gb18030'
             st.write('csv读取成功')
-        if str(item.name).split('.')[1] == 'xlsx':
+        elif str(item.name).split('.')[1] == 'xlsx':
             df = pd.read_excel(uploaded_file[index])
             st.write('xlsx读取成功')
         
