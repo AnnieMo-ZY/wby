@@ -147,7 +147,7 @@ if len(uploaded_file) > 1:
             df = pd.read_excel(uploaded_file[index])
             st.write('xlsx读取成功')
             df_ls.append(df)
-        st.write(f'共{len(df_ls)份文件}')
+        st.write(f'共{len(df_ls)}份文件')
             
      
     try:
