@@ -5,6 +5,20 @@ import matplotlib.pyplot as plt
 import altair as alt
 import time
 
+
+
+def and_algo(post,single):
+    count = 0 
+    #print(len(single))
+    for word  in single:
+        #print(word)
+        if word in post:
+            count+=1
+    if count == len(single):
+        return 1
+    else:
+        return 0
+
 def merge(df_ls):
     defined_columns = ["平台类型","identify_id",'分类',"media_id","media_url","标题","内容","文章创建时间"
                    ,"关键词","account_id","性别","地域","账号名称","简介","认证原因","主页链接","粉丝数","产品线","微闪投"
@@ -22,6 +36,13 @@ def merge(df_ls):
                 copy_df.rename(columns={"red_id" : "account_id"}, inplace = True)
             if '账号简介' in col:
                 copy_df.rename(columns={"账号简介" : "简介"}, inplace = True)
+            if '微博评论数' in col:
+                copy_df.rename(columns={"微博评论数" : "短视频评论数",'微博转发数':'短视频转发数' ,'微博点赞数':'短视频点赞数' }, inplace = True)
+            if '标题内容' in col:
+                copy_df.rename(columns={'标题内容':'内容' }, inplace = True)
+            if '是否上架' in col:
+                copy_df.rename(columns={'是否上架':'上架状态' }, inplace = True)
+                
        
         #不存在的列名补齐
         for d in defined_columns:
@@ -102,22 +123,13 @@ def main(user_input, dataframe):
         single = mulitiple_word.split('&')
         #遍历每个拆分后的词
         word_count = 0
-        for word in single: 
-            #更改 搜索列  ex:标题+内容
-            #遍历每个 标题+内容列
-            for post in content['标题+内容']:  # 更改excel表格对应列名
-                #如果含有关键词 并辅助列=0
-                try:
-                    if word in post  :
-                        #辅助列标记为1
-                        word_count +=1
-                except:
-                    print(f'请检查excel表格单元格: {marker_length}行')
-                    continue
-            #取标记为1的sum
+        #temp 储存 and_algo结果
+        temp = []
+        for post in content['标题+内容']: 
+            aa = and_algo(post, single)
+            temp.append(aa)
+            word_count = sum(temp) 
         d[mulitiple_word]  = word_count
-
-        #print(f'关键词:{mulitiple_word} \t 数量：{word_count} \t 占比: {(word_count/posts_length) * 100 :.2f}%')
 
 
     sorted_d = dict(sorted(d.items(), key=lambda x: x[1],reverse =False))
