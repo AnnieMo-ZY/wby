@@ -162,7 +162,11 @@ def main(user_input, dataframe):
     return x , y, df
 
 st.title('🌎Excel小工具')
-count_down()
+for i in range(0,100):
+    count_down()
+    i+=1
+    time.sleep(1)
+    
 uploaded_file = st.file_uploader(label="上传Excel文件" , type = ['csv','xlsx'],accept_multiple_files=True )
 time.sleep(1)
 #合并文件
