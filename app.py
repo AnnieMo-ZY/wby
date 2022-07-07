@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import altair as alt
 import time
+from datetime import datetime
 
 def count_down():
     today = datetime.today()
