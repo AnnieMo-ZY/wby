@@ -263,7 +263,7 @@ with st.sidebar:
 
     
 with st.empty():
-for i in range(0,100):
-    count_down()
-    i+=1
-    time.sleep(1)
+    for i in range(0,100):
+        count_down()
+        i+=1
+        time.sleep(1)
