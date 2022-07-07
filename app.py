@@ -5,6 +5,22 @@ import matplotlib.pyplot as plt
 import altair as alt
 import time
 
+def count_down():
+    today = datetime.today()
+    year_month = str(today).split()[0]
+
+    xiaban = datetime.strptime('{} 18:00:00'.format(year_month), '%Y-%m-%d %H:%M:%S')
+
+    time_diff = str(xiaban - today)
+
+    hour = time_diff.split(':')[0]
+    min = time_diff.split(':')[1]
+    sec = float(time_diff.split(':')[2])
+    
+    with st.empty():
+        st.write('距离下班还要:{}小时 {}分钟 {:.2f}秒'.format(hour, min, sec))
+
+
 
 
 def and_algo(post,single):
@@ -145,7 +161,7 @@ def main(user_input, dataframe):
     return x , y, df
 
 st.title('🌎Excel小工具')
-
+count_down()
 uploaded_file = st.file_uploader(label="上传Excel文件" , type = ['csv','xlsx'],accept_multiple_files=True )
 time.sleep(1)
 #合并文件
