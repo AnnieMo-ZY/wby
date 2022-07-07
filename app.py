@@ -10,7 +10,7 @@ def count_down():
     today = datetime.today()
     year_month = str(today).split()[0]
 
-    xiaban = datetime.strptime('{} 18:00:00'.format(year_month), '%Y-%m-%d %H:%M:%S')
+    xiaban = datetime.strptime('{} 18:15:00'.format(year_month), '%Y-%m-%d %H:%M:%S')
 
     time_diff = str(xiaban - today)
 
