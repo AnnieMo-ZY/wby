@@ -14,7 +14,7 @@ def count_down():
 
     time_diff = str(xiaban - today)
 
-    hour = time_diff.split(':')[0]
+    hour = int(time_diff.split(':')[0])-8
     min = time_diff.split(':')[1]
     sec = float(time_diff.split(':')[2])
     
