@@ -260,10 +260,5 @@ with st.sidebar:
     #         label="下载合并文件 as CSV",
     #         data=csv,
     #         file_name='combined_file.csv',)
+    count_down()
 
-    
-with st.empty():
-    for i in range(0,100):
-        count_down()
-        i+=1
-        time.sleep(1)
