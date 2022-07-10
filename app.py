@@ -242,10 +242,12 @@ if len(uploaded_file) == 1:
 
 
 with st.sidebar:
-    st.subheader('🌟使用步骤') 
+    st.subheader('🌟使用步骤')
+
     st.write('1: 传入Excel 文件xlsx,csv format')
     st.write('2: 选中对应平台类型 + 关键词')
     st.write('3: 文本框输入搜索词')
+    st.write('备注: 上传多文件自动合并文件')
 
     with st.empty():
         for seconds in range(60):
