@@ -19,7 +19,7 @@ def count_down():
     sec = float(time_diff.split(':')[2])
     
     with st.empty():
-        st.write('距离下班还要:{}小时 {}分钟 {:.2f}秒'.format(hour, min, sec))
+        st.write('⏳ 距离下班还有:{}小时 {}分钟 {:.0f}秒'.format(hour, min, sec))
 
 
 
@@ -243,22 +243,13 @@ if len(uploaded_file) == 1:
 
 with st.sidebar:
     st.subheader('🌟使用步骤') 
-    st.write('1: 传入Excel 文件')
-    st.write('2: 选中对应平台/关键词')
-    st.write('3: 输入关键词+Enter')
-    # image = Image.open('C:/Users/HFY/Desktop/streamlit/11.jpeg')
-    # st.image(image, caption='')
+    st.write('1: 传入Excel 文件xlsx,csv format')
+    st.write('2: 选中对应平台类型 + 关键词')
+    st.write('3: 文本框输入搜索词')
 
-    # if len(uploaded_file)>0:
-    #     files_ls = [pd.read_excel(file) for file in uploaded_file]
-
-    #     concat_data = pd.concat(files_ls,sort=True)
-
-    #     csv = convert_df(concat_data)
-
-    #     st.download_button(
-    #         label="下载合并文件 as CSV",
-    #         data=csv,
-    #         file_name='combined_file.csv',)
-    count_down()
+    with st.empty():
+        for seconds in range(60):
+            count_down()
+            time.sleep(1)
+        st.write("✔️ one minute passed!")
 
