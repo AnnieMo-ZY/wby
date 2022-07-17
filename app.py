@@ -4,26 +4,31 @@ import numpy as np
 import matplotlib.pyplot as plt
 import altair as alt
 import time
-from datetime import datetime
+from datetime import datetime, timedelta, timezone,tzinfo
 
 def count_down():
-    today = datetime.today()
+    week_dict = {1:'Monday', 2:'Tuesday', 3:'Wednesday', 4:'Thursday', 5:'Friday', 6:'Saturday', 7:'Sunday'}
+    # 设置中国时区
+    today = datetime.today().astimezone(timezone(timedelta(hours=8)))
     year_month = str(today).split()[0]
-
-    xiaban = datetime.strptime('{} 18:15:00'.format(year_month), '%Y-%m-%d %H:%M:%S')
-
+    xiaban = datetime.strptime('{} 18:15:00'.format(year_month), '%Y-%m-%d %H:%M:%S').astimezone(timezone(timedelta(hours=8)))
     time_diff = str(xiaban - today)
 
-    hour = int(time_diff.split(':')[0])-8
+    hour = int(time_diff.split(':')[0])
     min = time_diff.split(':')[1]
     sec = float(time_diff.split(':')[2])
     
     with st.empty():
-        st.write('⏳ 距离下班还有:{}小时 {}分钟 {:.0f}秒'.format(hour, min, sec))
+        # 1-5工作日
+        # 6 7周末
+        weekday = datetime.today().astimezone(timezone(timedelta(hours=8))).weekday()
+        if weekday <= 5:
+            st.subheader(f'今天是工作日： {week_dict[weekday]}')
+            st.subheader('⏳ 距离下班还有:{}小时 {}分钟 {:.0f}秒'.format(hour, min, sec))
 
-
-
-
+        if weekday >5:
+            st.subheader(f'周末啦')
+            
 def and_algo(post,single):
     count = 0 
     #print(len(single))
@@ -59,8 +64,6 @@ def merge(df_ls):
                 copy_df.rename(columns={'标题内容':'内容' }, inplace = True)
             if '是否上架' in col:
                 copy_df.rename(columns={'是否上架':'上架状态' }, inplace = True)
-                
-       
         #不存在的列名补齐
         for d in defined_columns:
             if d not in list(copy_df.columns):
@@ -71,7 +74,6 @@ def merge(df_ls):
     return final
 
 #定义功能
-
 @st.cache
 def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
