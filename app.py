@@ -6,29 +6,33 @@ import altair as alt
 import time
 from datetime import datetime, timedelta, timezone,tzinfo
 
-def count_down():
+def count_down(xiaban_min):
     week_dict = {1:'Monday', 2:'Tuesday', 3:'Wednesday', 4:'Thursday', 5:'Friday', 6:'Saturday', 7:'Sunday'}
     # 设置中国时区
     today = datetime.today().astimezone(timezone(timedelta(hours=8)))
     year_month = str(today).split()[0]
-    xiaban = datetime.strptime('{} 18:15:00'.format(year_month), '%Y-%m-%d %H:%M:%S').astimezone(timezone(timedelta(hours=8)))
-    time_diff = str(xiaban - today)
-
-    hour = int(time_diff.split(':')[0])
-    min = time_diff.split(':')[1]
-    sec = float(time_diff.split(':')[2])
-    
     with st.empty():
+        st.subheader(f'下班时间设置为6点{xiaban_min}分')
+    xiaban = datetime.strptime('{} 18:{}:00'.format(year_month,xiaban_min), '%Y-%m-%d %H:%M:%S').astimezone(timezone(timedelta(hours=8)))
+
+    if xiaban > today:
+        time_diff = str(xiaban - today)
+        hour = int(time_diff.split(':')[0])
+        min = time_diff.split(':')[1]
+        sec = float(time_diff.split(':')[2])
         # 1-5工作日
         # 6 7周末
         weekday = datetime.today().astimezone(timezone(timedelta(hours=8))).weekday()
-        if weekday <= 5:
-            st.subheader(f'今天是工作日： {week_dict[weekday]}')
-            st.subheader('⏳ 距离下班还有:{}小时 {}分钟 {:.0f}秒'.format(hour, min, sec))
+        # if weekday <= 5:
 
-        if weekday >5:
-            st.subheader(f'周末啦')
-            
+        st.subheader(f'📆Date:{week_dict[weekday]}')
+        st.subheader('⏳ 距离下班还有:{}小时 {}分钟 {:.0f}秒'.format(hour, min, sec))
+        # elif weekday > 5:
+        #     st.subheader(f'📆Date:{week_dict[weekday]} \n周末啦')
+    else:
+        st.subheader('下班啦！')
+
+# &搜索逻辑 需要所以关键词同时出现才计算
 def and_algo(post,single):
     count = 0 
     #print(len(single))
@@ -41,7 +45,9 @@ def and_algo(post,single):
     else:
         return 0
 
+#合并文件
 def merge(df_ls):
+    #合并后保存列名
     defined_columns = ["平台类型","identify_id",'分类',"media_id","media_url","标题","内容","文章创建时间"
                    ,"关键词","account_id","性别","地域","账号名称","简介","认证原因","主页链接","粉丝数","产品线","微闪投"
                   ,"上架状态","账号分类","短视频转发数","短视频评论数","短视频点赞数","是否命中"]
@@ -64,6 +70,8 @@ def merge(df_ls):
                 copy_df.rename(columns={'标题内容':'内容' }, inplace = True)
             if '是否上架' in col:
                 copy_df.rename(columns={'是否上架':'上架状态' }, inplace = True)
+                
+       
         #不存在的列名补齐
         for d in defined_columns:
             if d not in list(copy_df.columns):
@@ -74,6 +82,7 @@ def merge(df_ls):
     return final
 
 #定义功能
+
 @st.cache
 def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
@@ -200,10 +209,6 @@ if len(uploaded_file) > 1:
         mime = 'text/csv')
 
 
-
-
-
-
 col1 , col2, col3 = st.columns(3)
 if len(uploaded_file) == 1:
     if str(uploaded_file[0].type).split('/')[1] =='csv':
@@ -242,18 +247,14 @@ if len(uploaded_file) == 1:
         st.altair_chart(bars, use_container_width=True)
         st.dataframe(df)
 
-
 with st.sidebar:
     st.subheader('🌟使用步骤')
-
-    st.write('1: 传入Excel 文件xlsx,csv format')
+    st.write('1: 传入Excel xlsx,csv格式 默认读取第一张sheet')
     st.write('2: 选中对应平台类型 + 关键词')
     st.write('3: 文本框输入搜索词')
     st.write('备注: 上传多文件自动合并文件')
+    xiaban_min = st.slider('下班时间为6点 ',0,60, step=1)
 
-    with st.empty():
-        for seconds in range(60):
-            count_down()
-            time.sleep(1)
-        st.write("✔️ one minute passed!")
+    count_down(xiaban_min)
 
+        #st.subheader("✔️ one minute passed!")
