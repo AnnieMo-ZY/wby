@@ -22,7 +22,7 @@ def count_down(xiaban_min):
         sec = float(time_diff.split(':')[2])
         # 1-5工作日
         # 6 7周末
-        weekday = int(datetime.today().astimezone(timezone(timedelta(hours=8))).weekday())
+        weekday = int(datetime.today().astimezone(timezone(timedelta(hours=8))).weekday())+1
         if weekday <= 5:
             st.subheader(f'📆Date:{week_dict[weekday]}')
             st.subheader('⏳ 距离下班还有:{}小时 {}分钟 {:.0f}秒'.format(hour, min, sec))
