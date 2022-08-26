@@ -16,8 +16,8 @@ def count_down(xiaban_min):
     xiaban = datetime.strptime('{} 18:{}:00'.format(year_month,xiaban_min), '%Y-%m-%d %H:%M:%S').astimezone(timezone(timedelta(hours=8)))
 
     if xiaban > today:
-        time_diff = xiaban - today
-        st.write('!!!!!!!!!!!!!' + time_diff)
+        time_diff = str(xiaban - today)
+
         hour = time_diff.split(':')[0]
         min = time_diff.split(':')[1]
         sec = time_diff.split(':')[2]
