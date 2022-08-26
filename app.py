@@ -17,10 +17,11 @@ def count_down(xiaban_min):
 
     if xiaban > today:
         time_diff = str(xiaban - today)
-        st.write(time_diff)
+        st.write('!!!!!!!!!!!!!' + time_diff)
         hour = time_diff.split(':')[0]
         min = time_diff.split(':')[1]
-        sec = float(time_diff.split(':')[2])
+        sec = time_diff.split(':')[2]
+        
         # 1-5工作日
         # 6 7周末
         weekday = datetime.today().astimezone(timezone(timedelta(hours=8))).weekday()
