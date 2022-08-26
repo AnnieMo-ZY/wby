@@ -18,7 +18,7 @@ def count_down(xiaban_min):
     if xiaban > today:
         time_diff = str(xiaban - today)
         st.write(time_diff)
-        hour = int(time_diff.split(':')[0])
+        hour = time_diff.split(':')[0]
         min = time_diff.split(':')[1]
         sec = float(time_diff.split(':')[2])
         # 1-5工作日
