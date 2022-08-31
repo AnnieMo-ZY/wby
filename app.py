@@ -174,7 +174,7 @@ def main(user_input, dataframe):
 
     return x , y, df
 
-st.title('🌎Excel小工具')
+st.title('🌎关键词词频分析')
     
 uploaded_file = st.file_uploader(label="上传Excel文件" , type = ['csv','xlsx'],accept_multiple_files=True )
 time.sleep(1)
