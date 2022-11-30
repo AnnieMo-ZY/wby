@@ -9,7 +9,7 @@ from datetime import date
 import pandas_ta as ta
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
-
+import time
 st.set_page_config(page_title = '📈 AI Trading System',layout = 'wide')
 
 
@@ -18,6 +18,28 @@ BYD = yf.Ticker("1211.HK")
 data = BYD.history(interval = "5m")
 data['Datetime'] = data.index
 
+def get_wr(high, low, close, lookback):
+    highh = high.rolling(lookback).max() 
+    lowl = low.rolling(lookback).min()
+    wr = -100 * ((highh - close) / (highh - lowl))
+    return wr
+
+
+def pre_process(data):
+    data.ta.rsi(close='Close', length=15, append=True, signal_indicators=True)
+    data.ta.rsi(close='Close', length=25, append=True, signal_indicators=True)
+    data.ta.rsi(close='Close', length=35, append=True, signal_indicators=True)
+    data['wr15'] = get_wr(data['High'],data['Low'],data['Close'],15)
+    data['wr25'] = get_wr(data['High'],data['Low'],data['Close'],25)
+    data['wr35'] = get_wr(data['High'],data['Low'],data['Close'],35)
+    data['atr15'] = ta.atr(data.High,data.Low,data.Close,window=15,fillna=False)
+    data['atr25'] = ta.atr(data.High,data.Low,data.Close,window=25,fillna=False)
+    data['atr35'] = ta.atr(data.High,data.Low,data.Close,window=35,fillna=False)
+    data['sma15'] = data['Close'].rolling(15).mean()
+    data['sma25'] = data['Close'].rolling(25).mean()
+    data['sma35'] = data['Close'].rolling(35).mean()
+    data.ta.stoch(high=data.High, low=data.Low, k=14, d=3, append=True)
+    return data
 
 def stock_price_visualize(data,stock_name):
     x = [i for i in range(data.shape[0])]
@@ -127,7 +149,14 @@ st.markdown('***原模型训练集为2018~2020年外汇市场M15货币数据***'
 tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
 
 with tab0:
+    LABEL_DATA = st.button('标记数据集')
     st.dataframe(data.iloc[::-1], width= 2000, height=600,use_container_width = False)
+    if LABEL_DATA:
+        data = pre_process(data)
+        marker = st.success('完成标记技术指标数据', icon="✅")
+        time.sleep(2)
+        marker.empty()
+
 
 with tab1:
     fig = stock_price_visualize(data,'比亚迪')
@@ -147,5 +176,8 @@ with tab2:
     col3.metric(str(data['Datetime'][-2])[11:-6] + " 最高价", str(data.High[-2])[0:7], str(data.High[-2] -data.High[-3])[0:7])
     col4.metric(str(data['Datetime'][-2])[11:-6] + " 最低价", str(data.Low[-2])[0:7], str(data.Low[-2] -data.Low[-3])[0:7])
     
-
-    col1.metric(str(data['Datetime'][-2])[11:-6] + " RSI14", str(data.RSI_14[-2])[0:7], str(data.RSI_14[-2] -data.RSI_14[-3])[0:7])
+    if LABEL_DATA:
+        col1.metric(str(data['Datetime'][-2])[11:-6] + " RSI14", str(data.RSI_14[-2])[0:7], str(data.RSI_14[-2] - data.RSI_14[-3])[0:7])
+        col2.metric(str(data['Datetime'][-2])[11:-6] + " WR15", str(data.wr15[-2])[0:7],  str(data.wr15[-2] - data.wr15[-3])[0:7])
+        col3.metric(str(data['Datetime'][-2])[11:-6] + " ATR15", str(data.atr15[-2])[0:7], str(data.atr15[-2] -data.atr15[-3])[0:7])
+        col4.metric(str(data['Datetime'][-2])[11:-6] + " SMA15", str(data.sma15[-2])[0:7], str(data.sma15[-2] -data.sma15[-3])[0:7])
