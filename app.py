@@ -141,8 +141,8 @@ st.markdown('# 📈AI Guided Financial Trading Dashboard')
 
 # with open('C:\\Users\\HFY\\Desktop\\app\\time.html' , 'r', encoding = 'utf-8') as f:
 #     st.components.v1.html(f"""{f.read()}""")
-st.markdown('#### 通过检测Long Term Moving Average(长期移动均线)与Short Term Moving Average(短期移动均线)相交的情况,以及均线到烛台价格的距离,标记数据集作为深度学习模型的特征')
-st.markdown('#### 结合计算RSI,MACD,William %R,SMA,EMA等11类针对收盘价的技术指标,使用RNN(循环神经网络),Transfomer(注意力机制)模型,对下一时刻的最高价/最低价进行预测,以及预测进场时机')
+st.markdown('##### 通过检测Long Term Moving Average(长期移动均线)与Short Term Moving Average(短期移动均线)相交的情况,以及均线到烛台价格的距离,标记数据集作为深度学习模型的特征')
+st.markdown('##### 结合计算RSI,MACD,William %R,SMA,EMA等11类针对收盘价的技术指标,使用RNN(循环神经网络),Transfomer(注意力机制)模型,对下一时刻的最高价/最低价进行预测,以及预测进场时机')
 
 st.markdown('***原模型训练集为2018~2020年外汇市场M15货币数据***')
 
