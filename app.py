@@ -1,262 +1,151 @@
 import streamlit as st
-import pandas as pd
+import yfinance as yf
 import numpy as np
-import matplotlib.pyplot as plt
-import altair as alt
-import time
-from datetime import datetime, timedelta, timezone,tzinfo
+import pandas as pd
+import plotly.graph_objects as go
+import warnings
+warnings.filterwarnings('ignore')
+from datetime import date
+import pandas_ta as ta
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
 
-def count_down(xiaban_min):
-    week_dict = {1:'Monday', 2:'Tuesday', 3:'Wednesday', 4:'Thursday', 5:'Friday', 6:'Saturday', 7:'Sunday'}
-    # 设置中国时区
-    today = datetime.today().astimezone(timezone(timedelta(hours=8)))
-    year_month = str(today).split()[0]
-    with st.empty():
-        st.subheader(f'下班时间设置为6点{xiaban_min}分')
-    xiaban = datetime.strptime('{} 18:{}:00'.format(year_month,xiaban_min), '%Y-%m-%d %H:%M:%S').astimezone(timezone(timedelta(hours=8)))
-
-    if xiaban > today:
-        time_diff = str(xiaban - today)
-
-        hour = time_diff.split(':')[0]
-        min = time_diff.split(':')[1]
-        sec = time_diff.split(':')[2]
-        
-        # 1-5工作日
-        # 6 7周末
-        weekday = datetime.today().astimezone(timezone(timedelta(hours=8))).weekday()
-        if weekday <= 5:
-            st.subheader(f'📆Date:{week_dict[weekday]}')
-            st.subheader(f'⏳ 距离下班还有:{hour}小时 {min}分钟 {sec}秒')
-        elif weekday > 5:
-            st.subheader(f'📆Date:{week_dict[weekday]} \n周末啦')
-            st.subheader(f'⏳ 距离下班还有:{hour}小时 {min}分钟 {sec}秒')
-    else:
-        st.subheader('下班啦！')
-
-# &搜索逻辑 需要所以关键词同时出现才计算
-def and_algo(post,single):
-    count = 0 
-    #print(len(single))
-    for word  in single:
-        #print(word)
-        if word in post:
-            count+=1
-    if count == len(single):
-        return 1
-    else:
-        return 0
-
-#合并文件
-def merge(df_ls):
-    #合并后保存列名
-    defined_columns = ["平台类型","identify_id",'分类',"media_id","media_url","标题","内容","文章创建时间"
-                   ,"关键词","account_id","性别","地域","账号名称","简介","认证原因","主页链接","粉丝数","产品线","微闪投"
-                  ,"上架状态","账号分类","短视频转发数","短视频评论数","短视频点赞数","是否命中"]
-    files = []
-    for df in df_ls:
-        copy_df = df.copy() #使用备份 不在源数据更改 可重复运行
-        for col in copy_df.columns:
-        #更改列名
-            if '是否微闪投' in col:
-                copy_df.rename(columns={"是否微闪投" : "微闪投"}, inplace = True)
-            if '是否是精确搜索' in col:
-                copy_df.rename(columns={"是否是精确搜索" : "是否命中"}, inplace = True) 
-            if 'red_id' in col:
-                copy_df.rename(columns={"red_id" : "account_id"}, inplace = True)
-            if '账号简介' in col:
-                copy_df.rename(columns={"账号简介" : "简介"}, inplace = True)
-            if '微博评论数' in col:
-                copy_df.rename(columns={"微博评论数" : "短视频评论数",'微博转发数':'短视频转发数' ,'微博点赞数':'短视频点赞数' }, inplace = True)
-            if '标题内容' in col:
-                copy_df.rename(columns={'标题内容':'内容' }, inplace = True)
-            if '是否上架' in col:
-                copy_df.rename(columns={'是否上架':'上架状态' }, inplace = True)
-                
-       
-        #不存在的列名补齐
-        for d in defined_columns:
-            if d not in list(copy_df.columns):
-                copy_df.insert(copy_df.shape[1], column = d, value ='null')
-        copy_df = copy_df[defined_columns]
-        files.append(copy_df)
-    final = pd.concat([pd.DataFrame(i) for i in files])
-    return final
-
-#定义功能
-
-@st.cache
-def convert_df(df):
-    # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    return df.to_csv(encoding = 'utf_8_sig', line_terminator="\n", index = False).encode('utf_8_sig')
-
-# 选择搜索范围
-def select_data(dataframe,keyword,platform): #dataframe , keyword:str, platform:str
-    if platform == 'All':
-        pass
-    else:
-        dataframe = dataframe[dataframe['平台类型'].isin([platform])]
-
-    dataframe = dataframe[dataframe['关键词'].isin([keyword])]
-    return dataframe.reset_index()
-
-# 情感分析模块
-# def emotion_check(post):
-#     snownlp = SnowNLP(post)
-#     sentiments_score = snownlp.sentiments
-#     return sentiments_score
-
-# 搜索逻辑模块
-def main(user_input, dataframe):
-    content  = dataframe
-    posts_length = content.shape[0]
-    word_list = user_input.strip().split(',')
-    ls1 = [] # 保存含有 / 的词 
-    ls2 = [] # 保存含有 & 和其他词
-    for word in word_list:
-        if '/' in word:
-            ls1.append(word)
-        else:
-            ls2.append(word)
-    d={}
-
-    # FOR循环 遍历word_list的词
-    for mulitiple_word in ls1:
-        d.update({mulitiple_word:0})
-        #把有/拆分
-        single = mulitiple_word.split('/')
-        #创建辅助列 =0
-        content.loc[:,'辅助列']= 0
-        #遍历每个拆分后的词
-        for word in single: 
-            marker_length = 0
-            #更改 搜索列  ex:标题+内容
-            #遍历每个 标题+内容列
-            for post in content['标题+内容']:  # 更改excel表格对应列名
-                #如果含有关键词 并辅助列=0
-                try:
-                    if word in post  and content['辅助列'][marker_length] == 0 :
-                        #辅助列标记为1
-                        content['辅助列'][marker_length] = 1
-                    marker_length+=1
-                except:
-                    print(f'请检查excel表格单元格: {marker_length}行')
-                    continue
-            #取标记为1的sum
-            count = content['辅助列'].sum()
-        d[mulitiple_word]  = count
-        #print(f'关键词:{mulitiple_word} \t 数量：{count} \t 占比: {(count/posts_length) * 100 :.2f}%')
-
-    #AND 逻辑
-    for mulitiple_word in ls2:
-        #把有&拆分
-        single = mulitiple_word.split('&')
-        #遍历每个拆分后的词
-        word_count = 0
-        #temp 储存 and_algo结果
-        temp = []
-        for post in content['标题+内容']: 
-            aa = and_algo(post, single)
-            temp.append(aa)
-            word_count = sum(temp) 
-        d[mulitiple_word]  = word_count
+st.set_page_config(page_title = '📈 AI Trading System',layout = 'wide')
 
 
-    sorted_d = dict(sorted(d.items(), key=lambda x: x[1],reverse =False))
-    df = pd.DataFrame(list(sorted_d.items()) ,columns=['关键词','发文数量'])
-    df.loc[:,'占比%'] =df['发文数量'] /posts_length * 100 
-    #占比 保留 1位小数 %
-    df.round({'占比%' : 1})
 
-    #数据 x,y轴
-    x = list(sorted_d.keys())
-    y = list(sorted_d.values())
+BYD = yf.Ticker("1211.HK")
+data = BYD.history(interval = "5m")
+data['Datetime'] = data.index
 
-    return x , y, df
 
-st.title('🌎关键词词频分析')
+def stock_price_visualize(data,stock_name):
+    x = [i for i in range(data.shape[0])]
+
+    # moving average 200
+    MA200 = data['Close'].rolling(window =200).mean()
+    # moving average 100
+    MA100 = data['Close'].rolling(window =100).mean()
+    # moving average 14
+    MA14 = data['Close'].rolling(window =14).mean()
+
+    fig = go.Figure(data=[go.Candlestick(x=x,
+                    open=data['Open'],
+                    high=data['High'],
+                    low=data['Low'],
+                    close=data['Close'])])
+
+    # fig.layout = dict(xaxis=dict(type="category"))
+    fig.add_trace(go.Scatter(x=x, y= MA200, mode='lines', line=dict(width = 1.5),marker_color = 'red',
+                            showlegend=True, name = '长均线'))
+
+    fig.add_trace(go.Scatter(x=x, y= MA100, mode='lines', line=dict(width = 1.5),marker_color = 'green', 
+                            showlegend=True, name = '中均线'))
+
+    fig.add_trace(go.Scatter(x=x, y= MA14,mode='lines', line=dict(width = 1.5),marker_color = 'yellow',
+                            showlegend=True, name = '短均线'))
+
+    layout = go.Layout(
+        title = f'{stock_name}-K线图走势',
+        plot_bgcolor='#efefef',
+        # Font Families
+        font_family='Monospace',
+        font_color='#000000',
+        font_size=18,
+        xaxis=dict(
+            rangeslider=dict(
+                visible=False
+            )
+        )
+    )
+    fig.update_layout(layout)
+
+    # fig.show()
+    return fig
+
+def RSI_plot(data):
+    data.ta.rsi(close='Close', length=14, append=True, signal_indicators=True)
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_width=[0.25, 0.75])
+    x = [i for i in range(data.shape[0])]
+    fig.add_trace(go.Candlestick(
+        x=x,
+        open=data['Open'],
+        high=data['High'],
+        low=data['Low'],
+        close=data['Close'],
+        increasing_line_color='#ff9900',
+        decreasing_line_color='black',
+        showlegend=False
+    ))
+
+    # Make RSI Plot
+    fig.add_trace(go.Scatter(
+        x=x,
+        y=data['RSI_14'],
+        line=dict(color='#ff9900', width=2),
+        showlegend=False,
+    ), row=2, col=1
+    )
+    # Add upper/lower bounds
+    fig.update_yaxes(range=[-10, 110], row=2, col=1)
+    fig.add_hline(y=0, col=1, row=2, line_color="#666", line_width=2)
+    fig.add_hline(y=100, col=1, row=2, line_color="#666", line_width=2)
+
+    # Add overbought/oversold
+    fig.add_hline(y=30, col=1, row=2, line_color='#336699', line_width=2, line_dash='dash')
+    fig.add_hline(y=70, col=1, row=2, line_color='#336699', line_width=2, line_dash='dash')
+
+    # Customize font, colors, hide range slider
+    layout = go.Layout(
+        title = 'RSI14交易策略',
+        plot_bgcolor='#efefef',
+        # Font Families
+        font_family='Monospace',
+        font_color='#000000',
+        font_size=18,
+        xaxis=dict(
+            rangeslider=dict(
+                visible=False
+            )
+        )
+    )
+    fig.update_layout(layout)
+    # update and display
+    fig.update_layout(layout)
+    # fig.show()
+    return fig
+
+st.markdown('# 📈AI 智能交易系统')
+
+# with open('C:\\Users\\HFY\\Desktop\\app\\time.html' , 'r', encoding = 'utf-8') as f:
+#     st.components.v1.html(f"""{f.read()}""")
+st.markdown('#### 通过检测Long Term Moving Average(长期移动均线)与Short Term Moving Average(短期移动均线)交叉的交易情况,')
+st.markdown('#### 结合RSI,MACD,WR等11类技术指标对交易市场,使用RNN(循环神经网络),Transfomer(注意力机制)模型,对下一时刻的最高价/最低价进行预测,以及预测进场时机')
+
+st.markdown('***原模型训练集为2018~2020年外汇市场M15货币数据***')
+
+tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
+
+with tab0:
+    st.dataframe(data.iloc[::-1], width= 2000, height=600,use_container_width = False)
+
+with tab1:
+    fig = stock_price_visualize(data,'比亚迪')
+    st.plotly_chart(fig,use_container_width = True)
+
+    st.markdown('#### 假如RSI处于超卖区域并开始上穿30水平,则你需要寻找看涨的反转烛台形态。此时为买入信号')
+    st.markdown('#### 如果RSI处于超买区域并开始下穿70水平,则需要开始观察寻找看跌反转烛台。此时为做空信号')
+
+    rsi_fig = RSI_plot(data)
+    st.plotly_chart(rsi_fig,use_container_width = True)
+
+with tab2:
+    col1, col2, col3, col4 = st.columns(4)
+
+    col1.metric(str(data['Datetime'][-2])[11:-6] + " 开盘价", str(data.Open[-2])[0:7], str(data.Open[-2] -data.Open[-3])[0:7])
+    col2.metric(str(data['Datetime'][-2])[11:-6] + " 收盘价", str(data.Close[-2])[0:7],  str(data.Close[-2] -data.Close[-3])[0:7])
+    col3.metric(str(data['Datetime'][-2])[11:-6] + " 最高价", str(data.High[-2])[0:7], str(data.High[-2] -data.High[-3])[0:7])
+    col4.metric(str(data['Datetime'][-2])[11:-6] + " 最低价", str(data.Low[-2])[0:7], str(data.Low[-2] -data.Low[-3])[0:7])
     
-uploaded_file = st.file_uploader(label="上传Excel文件" , type = ['csv','xlsx'],accept_multiple_files=True )
-time.sleep(1)
-#合并文件
-if len(uploaded_file) > 1:
-    time.sleep(1)
-    df_ls = []
-    for index, item  in enumerate(uploaded_file):
-        if str(item.name).split('.')[1] == 'csv':
-            df = pd.read_csv(uploaded_file[index], encoding = 'utf-8') #encoding='gb18030'
-            st.write('csv读取成功')
-            df_ls.append(df)
-        elif str(item.name).split('.')[1] == 'xlsx':
-            df = pd.read_excel(uploaded_file[index])
-            st.write('xlsx读取成功')
-            df_ls.append(df)
-        st.write(f'共{len(df_ls)}份文件')
-            
-     
-    try:
-        concat_data = merge(df_ls)
-        concat_data.fillna({'粉丝数':0},inplace =True)
-        concat_data.fillna('null',inplace =True)
-        
-    except Exception as e:
-        st.write('检查列名')
-        st.write(str(e))
-    csv = convert_df(concat_data)
 
-    st.download_button(
-        label="下载合并文件 as CSV",
-        data=csv,
-        file_name='combined_file.csv',
-        mime = 'text/csv')
-
-
-col1 , col2, col3 = st.columns(3)
-if len(uploaded_file) == 1:
-    if str(uploaded_file[0].type).split('/')[1] =='csv':
-        dataframe = pd.read_csv(uploaded_file[0])
-    else:
-        dataframe = pd.read_excel(uploaded_file[0],dtype = str,index_col = False)
-
-    selected_keyword = list(dataframe['关键词'].unique())
-    selected_platform = list(dataframe['平台类型'].unique())
-    selected_platform.extend(['All'])
-    with st.container():
-        with col1:
-            pltf = st.selectbox('选择平台', selected_platform)
-        with col2:
-            keyword = st.selectbox( '选择关键词', selected_keyword)
-    dataframe = select_data(dataframe,keyword,pltf)
-    st.write('已选择:', pltf,keyword)
-    st.write('数据表')
-    st.dataframe(dataframe,1000,100)
-    user_input = st.text_input('输入搜索关键词', '')
-# 结果
-    if user_input:
-        try:
-            x,y,df =main(user_input,dataframe)
-
-        except:
-            st.write('请检查Excel表格列名')
-
-        main_result_jason = {'关键词': x, '数量':[int(i) for i in y]}
-
-        df= pd.DataFrame(main_result_jason)
-        bars = alt.Chart(df).mark_bar().encode(
-            y=alt.Y('关键词',sort = '-x'),
-            x=alt.X('数量:Q' )).properties( height = 400)
-
-        st.altair_chart(bars, use_container_width=True)
-        st.dataframe(df)
-
-with st.sidebar:
-    st.subheader('🌟使用步骤')
-    st.write('1: 传入Excel xlsx,csv格式 默认读取第一张sheet')
-    st.write('2: 选中对应平台类型 + 关键词')
-    st.write('3: 文本框输入搜索词')
-    st.write('备注: 上传多文件自动合并文件')
-    xiaban_min = st.slider('下班时间为6点 ',0,60, step=1)
-
-    count_down(xiaban_min)
-
-        #st.subheader("✔️ one minute passed!")
+    col1.metric(str(data['Datetime'][-2])[11:-6] + " RSI14", str(data.RSI_14[-2])[0:7], str(data.RSI_14[-2] -data.RSI_14[-3])[0:7])
