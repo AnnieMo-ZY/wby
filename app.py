@@ -376,7 +376,7 @@ data = pre_process(data)
 tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
 with tab0:
     LABEL_DATA = st.button('标记数据集')
-    st.dataframe(data.iloc[::-1], width= 2000, height=600,use_container_width = False)
+    st.dataframe(data.iloc[::-1], height=600,use_container_width = True)
     if LABEL_DATA:
         data = pre_process(data)
         marker = st.success('完成标记技术指标数据', icon="✅")
