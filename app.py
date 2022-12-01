@@ -356,6 +356,13 @@ def RSI_plot(data):
     # fig.show()
     return fig
 
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 st.markdown('# 📈AI Guided Financial Trading Dashboard')
 
