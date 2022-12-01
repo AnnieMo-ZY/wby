@@ -15,7 +15,6 @@ from sklearn.preprocessing import MinMaxScaler
 from keras.models import load_model
 import os
 
-
 st.set_page_config(page_title = '📈 AI Guided Trading System',layout = 'wide')
 
 
@@ -359,7 +358,6 @@ def RSI_plot(data):
 
 st.markdown('# 📈AI Guided Financial Trading Dashboard')
 
-
 st.markdown('#### 通过检测Long Term Moving Average(长期移动均线)与Short Term Moving Average(短期移动均线)交叉的交易情况,')
 st.markdown('#### 结合RSI,MACD,WR等11类技术指标对交易市场,使用RNN(循环神经网络),Transfomer(注意力机制)模型,对下一时刻的最高价/最低价进行预测,以及预测进场时机')
 st.markdown('***原模型训练集为2018~2020年外汇市场M15货币数据***')
@@ -368,14 +366,13 @@ st.markdown('***原模型训练集为2018~2020年外汇市场M15货币数据***'
 stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: https://finance.yahoo.com/lookup/')
 if stock_name:
     STOCK = yf.Ticker(stock_name)
-    data = STOCK.history(interval = "5m")
 else:
     stock_name = '小鹏'
     STOCK = yf.Ticker('XPEV')
-    data = STOCK.history(interval = "5m")
 
+data = STOCK.history(interval = "5m")
 data['Datetime'] = data.index
-
+data = pre_process(data)
 tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
 with tab0:
     LABEL_DATA = st.button('标记数据集')
@@ -415,7 +412,6 @@ with tab2:
         col2.metric(str(data['Datetime'].values[-2])[11:-6] + " WR25", str(data.wr25.values[-2])[0:7],  str(data.wr25.values[-2] - data.wr25.values[-3])[0:7])
         col3.metric(str(data['Datetime'].values[-2])[11:-6] + " ATR25", str(data.atr25.values[-2])[0:7], str(data.atr15.values[-2] -data.atr25.values[-3])[0:7])
         col4.metric(str(data['Datetime'].values[-2])[11:-6] + " SMA25", str(data.sma25.values[-2])[0:7], str(data.sma15.values[-2] -data.sma25.values[-3])[0:7])
-
 
 
 with tab3:
