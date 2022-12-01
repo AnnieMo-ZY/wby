@@ -14,10 +14,7 @@ import time
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import load_model
 import os
-
 st.set_page_config(page_title = '📈 AI Guided Trading System',layout = 'wide')
-
-
 def get_wr(high, low, close, lookback):
     highh = high.rolling(lookback).max() 
     lowl = low.rolling(lookback).min()
@@ -26,7 +23,8 @@ def get_wr(high, low, close, lookback):
 
 def make_prediction(model,train_x_dict, price_scaler_min,price_scaler_max):
     y_pred = model.predict(train_x_dict)
-    process_model_result(y_pred, price_scaler_min,price_scaler_max)
+    predicted_max,predicted_min,predicted_label = process_model_result(y_pred, price_scaler_min,price_scaler_max)
+    return predicted_max,predicted_min,predicted_label
 
 def pre_process(data):
     data.reset_index(inplace = True,drop = True)
@@ -49,7 +47,6 @@ def pre_process(data):
         GRYP_IDX[value] = idx
     data['event'].replace(GRYP_IDX, inplace= True)
     data.replace({'' : 0}, inplace = True)
-    
     data.dropna(subset=['ratio top','RSI_35'],inplace=True)
     return data
 
@@ -108,13 +105,11 @@ def distance(Low,High,Red,Green,Yellow):
 
     return ratio_top, ratio_mid, ratio_bottom, absolute_top, absolute_mid, absolute_bottom
 
-
 def within_price_range(Low,High,MA):
     if Low <= MA <= High:
         return 1
     else:
         return 0
-
 
 def MA_PRGY_Task(data):  
 
@@ -192,7 +187,6 @@ def MA_PRGY_Task(data):
     data['G'] = G_ls
     data['Y'] = Y_ls
 
-
 def generate_sequence(data, window_size):
     train_dt_ori, train_dt_scaled, target_minprice, target_maxprice, target_minp_scaled,\
     target_maxp_scaled, price_scaler_max, price_scaler_min = [], [], [], [], [], [], [], []
@@ -258,8 +252,8 @@ def process_model_result(y_pred,price_scaler_min, price_scaler_max):
     st.markdown(f'***预测下一时刻最高价为: {predicted_max[-1][0]}***')
     st.markdown(f'***预测下一时刻最低价为: {predicted_min[-1][0]}***')
     st.markdown(f'***预测下一时刻进场时机: {LABEL_INDEX[predicted_label[-1]]}***')
+    return predicted_max,predicted_min,predicted_label
     
-
 def stock_price_visualize(data,stock_name):
     x = [i for i in range(data.shape[0])]
 
@@ -355,7 +349,7 @@ def RSI_plot(data):
     fig.update_layout(layout)
     # fig.show()
     return fig
-
+    
 hide_streamlit_style = """
             <style>
             #MainMenu {visibility: hidden;}
@@ -381,9 +375,8 @@ else:
 data = STOCK.history(interval = "5m")
 data['Datetime'] = data.index
 # convert to Asia timezone
-data['Datetime'] = pd.DataFrame(pd.to_datetime(data['Datetime'] ,utc=False).tz_convert('Asia/Shanghai')).index
+data['Datetime'] = pd.DataFrame(pd.to_datetime(data['Datetime'] ,utc=True).tz_convert('Asia/Harbin')).index
 data = pre_process(data)
-
 tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
 with tab0:
     LABEL_DATA = st.button('标记数据集')
