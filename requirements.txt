@@ -3,7 +3,8 @@ matplotlib
 streamlit
 pandas
 openpyxl
-altair
 plotly
 yfinance
 pandas_ta
+sklearn
+keras
