@@ -424,7 +424,7 @@ with tab3:
     
     st.dataframe(data)
     LABEL_MODEL = st.button('RNN模型预测')
-    model = keras.models.load_model(".\\wby\\RNN.h5", compile=False)
+    model = keras.models.load_model("//app//wby//RNN.h5", compile=False)
 
     if LABEL_MODEL:
         with st.spinner(text="##### 正在处理数据..."):
