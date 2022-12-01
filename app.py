@@ -18,10 +18,6 @@ import os
 
 st.set_page_config(page_title = '📈 AI Guided Trading System',layout = 'wide')
 
-st.write((os.getcwd()))
-BYD = yf.Ticker("1211.HK")
-data = BYD.history(interval = "5m")
-data['Datetime'] = data.index
 
 def get_wr(high, low, close, lookback):
     highh = high.rolling(lookback).max() 
@@ -29,6 +25,9 @@ def get_wr(high, low, close, lookback):
     wr = -100 * ((highh - close) / (highh - lowl))
     return wr
 
+def make_prediction(model,train_x_dict, price_scaler_min,price_scaler_max):
+    y_pred = model.predict(train_x_dict)
+    process_model_result(y_pred, price_scaler_min,price_scaler_max)
 
 def pre_process(data):
     data.ta.rsi(close='Close', length=15, append=True, signal_indicators=True)
@@ -211,12 +210,11 @@ def generate_sequence(data, window_size):
             # GRYP Categorical
             train_dt_GRYP.append(data.loc[index:window_size-1+index, ['event']].values)
             # macd_1.append(data.loc[index:window_size-1+index, ['dir_change']].values)
-            # macd_2.append(data.loc[index:window_size-1+index, ['two_peaks']].values)
+
             # numerical feature min max scale
             train_dt_distance.append(scaler_a.fit_transform(data.loc[index:window_size-1+index, ['absolute top','absolute mid','absolute bottom',
                                                                     'ratio top','ratio mid','ratio bottom']].values))
-            # TA indicators numerical min max scale
-            
+            # TA indicators numerical min max scale     
             ta_indicators.append(scaler_b.fit_transform(data.loc[index:window_size-1+index, [
                                         'wr15', 'wr25','wr35','atr15','RSI_15','RSI_25','RSI_35',
                                         'atr25','atr35','STOCHk_14_3_3','STOCHd_14_3_3' ,'sma15','sma25',
@@ -224,20 +222,11 @@ def generate_sequence(data, window_size):
 
             # MinMax scale for the given windows size
             train_dt_scaled.append(scaler.fit_transform(data.loc[index:window_size-1+index, ['Open', 'High', 'Low', 'Close']].values))
-            # # Choose min_ws labels for predictions
-            # tmp_minprice = data.loc[window_size-1+index, f'min_{window_size}'].tolist()
-            # target_minprice.append(tmp_minprice)
-            # # Choose min_ws labels for predictions
-            # tmp_maxprice = data.loc[window_size-1+index, f'max_{window_size}'].tolist()
-            # target_maxprice.append(tmp_maxprice)
-            # # Choose bhs label for prediction
             # target_bhs.append(data.loc[window_size-1+index, [f'ws{window_size}_pt10_sl8']].values)
             # given ws max and mim of the sequences
             max_v = max(data.loc[index:window_size-1+index, ['Open', 'High', 'Low', 'Close']].max())
             min_v = min(data.loc[index:window_size-1+index, ['Open', 'High', 'Low', 'Close']].min())
             
-            # target_minp_scaled.append((tmp_minprice-min_v)/(max_v-min_v))
-            # target_maxp_scaled.append((tmp_maxprice-min_v)/(max_v-min_v))
             # save the minimum and maximum for inverse transform to orginal scale
             price_scaler_max.append(max_v)
             price_scaler_min.append(min_v)
@@ -248,9 +237,6 @@ def generate_sequence(data, window_size):
 
     train_arr_distance = np.array(train_dt_distance).astype('float32')
     ta_indicators =  np.array(ta_indicators).astype('float32')
-    # target_minpArr_scaled = np.array(target_minp_scaled).astype('float32')
-    # target_maxpArr_scaled = np.array(target_maxp_scaled).astype('float32') 
-    # target_arr_bhs = np.array(target_bhs).astype('int64')
 
     # TrainSet Features
     train_x_dict = {
@@ -262,16 +248,16 @@ def generate_sequence(data, window_size):
     return train_x_dict, price_scaler_max,price_scaler_min
 
 def process_model_result(y_pred,price_scaler_min, price_scaler_max):
-    LABEL_INDEX = {1:'买', 0:'持仓', 2:'卖'}
+    LABEL_INDEX = {1:'做多', 0:'持仓', 2:'做空'}
     predicted_max,predicted_min = [],[]
     for i in range(len(y_pred[0])):
         #print(price_scaler_max[i] - price_scaler_min[i], y_pred[0][i] , price_scaler_min[i] )
         predicted_max.append((y_pred[0][i] * (price_scaler_max[i] - price_scaler_min[i])) + price_scaler_min[i] )
         predicted_min.append((y_pred[1][i] * (price_scaler_max[i] - price_scaler_min[i])) + price_scaler_min[i] )
     predicted_label = y_pred[2].argmax(axis=-1).tolist()
-    st.markdown(f'预测下一时刻最高价为: {predicted_max[-1][0]}')
-    st.markdown(f'预测下一时刻最低价为: {predicted_min[-1][0]}')
-    st.markdown(f'预测下一时刻进场时机: {LABEL_INDEX[predicted_label[-1]]}')
+    st.markdown(f'***预测下一时刻最高价为: {predicted_max[-1][0]}***')
+    st.markdown(f'***预测下一时刻最低价为: {predicted_min[-1][0]}***')
+    st.markdown(f'***预测下一时刻进场时机: {LABEL_INDEX[predicted_label[-1]]}***')
     
 
 def stock_price_visualize(data,stock_name):
@@ -370,28 +356,39 @@ def RSI_plot(data):
     # fig.show()
     return fig
 
+
 st.markdown('# 📈AI Guided Financial Trading Dashboard')
-data = pre_process(data)
-# with open('C:\\Users\\HFY\\Desktop\\app\\time.html' , 'r', encoding = 'utf-8') as f:
-#     st.components.v1.html(f"""{f.read()}""")
+
+
 st.markdown('#### 通过检测Long Term Moving Average(长期移动均线)与Short Term Moving Average(短期移动均线)交叉的交易情况,')
 st.markdown('#### 结合RSI,MACD,WR等11类技术指标对交易市场,使用RNN(循环神经网络),Transfomer(注意力机制)模型,对下一时刻的最高价/最低价进行预测,以及预测进场时机')
-
 st.markdown('***原模型训练集为2018~2020年外汇市场M15货币数据***')
 
-tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
+# handle data input / select perfer stock 
+stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: https://finance.yahoo.com/lookup/')
+if stock_name:
+    STOCK = yf.Ticker(stock_name)
+    data = STOCK.history(interval = "5m")
+else:
+    stock_name = '小鹏'
+    STOCK = yf.Ticker('XPEV')
+    data = STOCK.history(interval = "5m")
 
+data['Datetime'] = data.index
+
+tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
 with tab0:
     LABEL_DATA = st.button('标记数据集')
     st.dataframe(data.iloc[::-1], width= 2000, height=600,use_container_width = False)
     if LABEL_DATA:
+        data = pre_process(data)
         marker = st.success('完成标记技术指标数据', icon="✅")
-        time.sleep(2)
+        time.sleep(1.5)
         marker.empty()
 
 
 with tab1:
-    fig = stock_price_visualize(data,'比亚迪')
+    fig = stock_price_visualize(data,stock_name)
     st.plotly_chart(fig,use_container_width = True)
     if LABEL_DATA:
         st.markdown('#### 假如RSI处于超卖区域并开始上穿30水平,则你需要寻找看涨的反转烛台形态。此时为买入信号')
@@ -420,24 +417,19 @@ with tab2:
         col4.metric(str(data['Datetime'].values[-2])[11:-6] + " SMA25", str(data.sma25.values[-2])[0:7], str(data.sma15.values[-2] -data.sma25.values[-3])[0:7])
 
 
-def make_prediction(model,train_x_dict, price_scaler_min,price_scaler_max):
-    y_pred = model.predict(train_x_dict)
-    process_model_result(y_pred, price_scaler_min,price_scaler_max)
-
 
 with tab3:
     WINDOW_SIZE = 10
     
     st.markdown('### 模型特征: ')
     st.dataframe(data)
-    # Train Set
-    with st.spinner(text="##### 正在处理数据..."):
-        train_x_dict, price_scaler_max,price_scaler_min = generate_sequence(data,WINDOW_SIZE)
-    
     LABEL_MODEL = st.button('RNN模型预测')
-    model = keras.models.load_model('//app//wby//RNN.h5', compile=False)
+    model = keras.models.load_model("//app//wby//RNN.h5", compile=False)
+
     if LABEL_MODEL:
-        make_prediction(model,train_x_dict,price_scaler_min,price_scaler_max)
-        st.success('🚩已完成')
+        with st.spinner(text="##### 正在处理数据..."):
+            train_x_dict, price_scaler_max,price_scaler_min = generate_sequence(data,WINDOW_SIZE)
+            make_prediction(model,train_x_dict,price_scaler_min,price_scaler_max)
+            st.success('🚩已完成')
 
             
