@@ -6,5 +6,5 @@ openpyxl
 plotly
 yfinance
 pandas_ta
-sklearn
+scikit-learn
 keras
