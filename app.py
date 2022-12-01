@@ -13,13 +13,12 @@ import plotly.graph_objects as go
 import time
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import load_model
-
 import os
-print( '***获取当前目录***')
-st.write((os.getcwd()))
+
 
 st.set_page_config(page_title = '📈 AI Guided Trading System',layout = 'wide')
 
+st.write((os.getcwd()))
 BYD = yf.Ticker("1211.HK")
 data = BYD.history(interval = "5m")
 data['Datetime'] = data.index
