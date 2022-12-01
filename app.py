@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import warnings
+from tensorflow import keras
 warnings.filterwarnings('ignore')
 from datetime import date
 import pandas_ta as ta
