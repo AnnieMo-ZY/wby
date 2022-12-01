@@ -29,6 +29,7 @@ def make_prediction(model,train_x_dict, price_scaler_min,price_scaler_max):
     process_model_result(y_pred, price_scaler_min,price_scaler_max)
 
 def pre_process(data):
+    data.reset_index(inplace = True,drop = True)
     data.ta.rsi(close='Close', length=15, append=True, signal_indicators=True)
     data.ta.rsi(close='Close', length=25, append=True, signal_indicators=True)
     data.ta.rsi(close='Close', length=35, append=True, signal_indicators=True)
@@ -48,7 +49,7 @@ def pre_process(data):
         GRYP_IDX[value] = idx
     data['event'].replace(GRYP_IDX, inplace= True)
     data.replace({'' : 0}, inplace = True)
-    data.reset_index(inplace = True,drop = True)
+    
     data.dropna(subset=['ratio top','RSI_35'],inplace=True)
     return data
 
@@ -372,7 +373,10 @@ else:
 
 data = STOCK.history(interval = "5m")
 data['Datetime'] = data.index
+# convert to Asia timezone
+data['Datetime'] = pd.DataFrame(pd.to_datetime(data['Datetime'] ,utc=True).tz_convert('Asia/Harbin')).index
 data = pre_process(data)
+
 tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
 with tab0:
     LABEL_DATA = st.button('标记数据集')
