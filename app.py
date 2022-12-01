@@ -438,5 +438,12 @@ with tab3:
             train_x_dict, price_scaler_max,price_scaler_min = generate_sequence(data,WINDOW_SIZE)
             make_prediction(model,train_x_dict,price_scaler_min,price_scaler_max)
             st.success('🚩已完成')
+        # check model performance
+        max_chart_data = pd.DataFrame({'预测最高值':[float(i) for i in predicted_max] , '真实最高值':data.High.tolist()[WINDOW_SIZE-1:]})
+        st.markdown('### 预测最高值验证:')
+        st.line_chart(max_chart_data)
 
+        max_chart_data = pd.DataFrame({'预测最低值':[float(i) for i in predicted_min] , '真实最低值':data.Low.tolist()[WINDOW_SIZE-1:]})
+        st.markdown('### 预测最低值验证:')
+        st.line_chart(max_chart_data)
             
