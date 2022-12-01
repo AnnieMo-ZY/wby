@@ -8,3 +8,4 @@ yfinance
 pandas_ta
 scikit-learn
 keras
+tensorflow
