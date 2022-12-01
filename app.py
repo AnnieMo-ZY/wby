@@ -11,7 +11,6 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import time
 from sklearn.preprocessing import MinMaxScaler
-import keras.metrics
 from keras.models import load_model
 
 
