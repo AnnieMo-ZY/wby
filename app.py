@@ -10,9 +10,7 @@ import pandas_ta as ta
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import time
-from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_squared_error
 import keras.metrics
 from keras.models import load_model
 
