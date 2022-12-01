@@ -14,6 +14,9 @@ import time
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import load_model
 
+import os
+print( '***获取当前目录***')
+st.write((os.getcwd()))
 
 st.set_page_config(page_title = '📈 AI Guided Trading System',layout = 'wide')
 
