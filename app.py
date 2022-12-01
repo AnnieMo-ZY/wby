@@ -417,20 +417,21 @@ with tab2:
         col3.metric(str(data['Datetime'].values[-2])[11:-6] + " ATR25", str(data.atr25.values[-2])[0:7], str(data.atr15.values[-2] -data.atr25.values[-3])[0:7])
         col4.metric(str(data['Datetime'].values[-2])[11:-6] + " SMA25", str(data.sma25.values[-2])[0:7], str(data.sma15.values[-2] -data.sma25.values[-3])[0:7])
 
-
 with tab3:
     WINDOW_SIZE = 10
     
     st.markdown('### 模型特征: ')
+    
     st.dataframe(data)
     LABEL_MODEL = st.button('RNN模型预测')
-    model = keras.models.load_model("//app//wby//RNN.h5", compile=False)
+    model = keras.models.load_model("C:\\Users\\HFY\\Desktop\\app\\Bi_RNN.h5", compile=False)
 
     if LABEL_MODEL:
         with st.spinner(text="##### 正在处理数据..."):
             train_x_dict, price_scaler_max,price_scaler_min = generate_sequence(data,WINDOW_SIZE)
-            make_prediction(model,train_x_dict,price_scaler_min,price_scaler_max)
+            predicted_max,predicted_min,predicted_label = make_prediction(model,train_x_dict,price_scaler_min,price_scaler_max)
             st.success('🚩已完成')
+            
         # check model performance
         max_chart_data = pd.DataFrame({'预测最高值':[float(i) for i in predicted_max] , '真实最高值':data.High.tolist()[WINDOW_SIZE-1:]})
         st.markdown('### 预测最高值验证:')
