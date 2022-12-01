@@ -1,6 +1,6 @@
 # 👷 
 ### STOCK MARKET PREDICTION
 
-***DATA SOURCE: yfiaance***
+***DATA SOURCE: yfiance***
 
 MODEL: RNN
