@@ -428,7 +428,6 @@ def make_prediction(model,train_x_dict, price_scaler_min,price_scaler_max):
 with tab3:
     WINDOW_SIZE = 10
     
-
     st.markdown('### 模型特征: ')
     st.dataframe(data)
     # Train Set
@@ -436,11 +435,9 @@ with tab3:
         train_x_dict, price_scaler_max,price_scaler_min = generate_sequence(data,WINDOW_SIZE)
     
     LABEL_MODEL = st.button('RNN模型预测')
-    model = tf.keras.models.load_model('C:\\Users\\HFY\\Desktop\\RNN.h5', compile=False)
+    model = tf.keras.models.load_model('.\\RNN.h5', compile=False)
     if LABEL_MODEL:
         make_prediction(model,train_x_dict,price_scaler_min,price_scaler_max)
         st.info('Finished')
 
-
-            
             
