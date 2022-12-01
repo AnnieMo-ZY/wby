@@ -386,7 +386,7 @@ with tab0:
     st.dataframe(data.iloc[::-1], width= 2000, height=600,use_container_width = False)
     if LABEL_DATA:
         marker = st.success('完成标记技术指标数据', icon="✅")
-        time.sleep(0.5)
+        time.sleep(2)
         marker.empty()
 
 
@@ -438,6 +438,6 @@ with tab3:
     model = keras.models.load_model('//app//wby//RNN.h5', compile=False)
     if LABEL_MODEL:
         make_prediction(model,train_x_dict,price_scaler_min,price_scaler_max)
-        st.info('Finished')
+        st.success('🚩已完成')
 
             
