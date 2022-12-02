@@ -424,7 +424,7 @@ with tab3:
     
     st.markdown('### 模型特征: ')
     if LABEL_DATA:
-        data = preprocess(data)
+        data = pre_process(data)
         st.dataframe(data)
     else:
         st.dataframe(data)
