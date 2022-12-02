@@ -375,10 +375,12 @@ else:
 data = STOCK.history(interval = "15m")
 data['Datetime'] = data.index
 # convert to Asia timezone
-# data['Datetime'] = pd.DataFrame(pd.to_datetime(data['Datetime'] ,utc=True).tz_convert('Asia/Harbin')).index
-data = pre_process(data)
+data['Datetime'] = pd.DataFrame(pd.to_datetime(data['Datetime'] ,utc=True).tz_convert('Asia/Shanghai')).index
+
 tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
 with tab0:
+    d=pd.Timestamp(data['Datetime'][-1])
+    st.write(d.tz)
     LABEL_DATA = st.button('标记数据集')
     st.dataframe(data.iloc[::-1], height=600,use_container_width = True)
     if LABEL_DATA:
@@ -421,12 +423,15 @@ with tab3:
     WINDOW_SIZE = 10
     
     st.markdown('### 模型特征: ')
-    
-    st.dataframe(data)
+    if LABEL_DATA:
+        data = preprocess(data)
+        st.dataframe(data)
+    else:
+        st.dataframe(data)
     LABEL_MODEL = st.button('RNN模型预测')
     model = keras.models.load_model("//app//wby//RNN.h5", compile=False)
 
-    if LABEL_MODEL:
+    if LABEL_MODEL :
         with st.spinner(text="##### 正在处理数据..."):
             train_x_dict, price_scaler_max,price_scaler_min = generate_sequence(data,WINDOW_SIZE)
             predicted_max,predicted_min,predicted_label = make_prediction(model,train_x_dict,price_scaler_min,price_scaler_max)
