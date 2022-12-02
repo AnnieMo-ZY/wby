@@ -372,7 +372,7 @@ else:
     stock_name = '小鹏'
     STOCK = yf.Ticker('XPEV')
 
-data = STOCK.history(interval = "30m")
+data = STOCK.history(interval = "15m")
 data['Datetime'] = data.index
 # convert to Asia timezone
 data['Datetime'] = pd.DataFrame(pd.to_datetime(data['Datetime'] ,utc=True).tz_convert('Asia/Harbin')).index
