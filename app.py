@@ -433,6 +433,7 @@ with tab3:
 
     if LABEL_MODEL :
         with st.spinner(text="##### 正在处理数据..."):
+            data = pre_process(data)
             train_x_dict, price_scaler_max,price_scaler_min = generate_sequence(data,WINDOW_SIZE)
             predicted_max,predicted_min,predicted_label = make_prediction(model,train_x_dict,price_scaler_min,price_scaler_max)
             st.success('🚩已完成')
