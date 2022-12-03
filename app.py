@@ -26,6 +26,21 @@ def make_prediction(model,train_x_dict, price_scaler_min,price_scaler_max):
     predicted_max,predicted_min,predicted_label = process_model_result(y_pred, price_scaler_min,price_scaler_max)
     return predicted_max,predicted_min,predicted_label
 
+def label_min_max(df, ws):
+    
+    local_min = np.array([])
+    local_max = np.array([])
+    for i in (range(len(df)-ws)):
+        local_min = np.append(local_min, df.Low.iloc[i:i+ws].min()) 
+        local_max = np.append(local_max, df.High.iloc[i:i+ws].max()) 
+    for i in range(ws):
+        local_min = np.append(local_min, df.Low.iloc[-ws:].min()) 
+        local_max = np.append(local_max, df.High.iloc[-ws:].min()) 
+    df[f'min_{ws}']=local_min
+    df[f'max_{ws}']=local_max
+    df.dropna(inplace=True)
+    return df
+
 def pre_process(data):
     data.reset_index(inplace = True,drop = True)
     data.ta.rsi(close='Close', length=15, append=True, signal_indicators=True)
@@ -41,13 +56,15 @@ def pre_process(data):
     data['sma25'] = data['Close'].rolling(25).mean()
     data['sma35'] = data['Close'].rolling(35).mean()
     data.ta.stoch(high=data.High, low=data.Low, k=14, d=3, append=True)
+    
     MA_PRGY_Task(data)
     GRYP_IDX = {}
     for idx, value in enumerate( list(data.event.unique())):
         GRYP_IDX[value] = idx
     data['event'].replace(GRYP_IDX, inplace= True)
+    data = label_min_max(data,10)
     data.replace({'' : 0}, inplace = True)
-    data.dropna(subset=['ratio top','RSI_35'],inplace=True)
+    data.dropna(subset=['ratio top','RSI_35','min_10'],inplace=True)
     return data
 
 def compare(Close,Red,Green,Yellow):
@@ -375,7 +392,7 @@ else:
 data = STOCK.history(interval = "15m")
 data['Datetime'] = data.index
 # convert to Asia timezone
-# data['Datetime'] = pd.DataFrame(pd.to_datetime(data['Datetime'] ,utc=True).tz_convert('Asia/Shanghai')).index
+data['Datetime'] = pd.DataFrame(pd.to_datetime(data['Datetime'] ,utc=True).tz_convert('Asia/Shanghai')).index
 
 tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
 with tab0:
@@ -429,21 +446,24 @@ with tab3:
     else:
         st.dataframe(data)
     LABEL_MODEL = st.button('RNN模型预测')
+
+    # file path "//app//wby//RNN.h5"
     model = keras.models.load_model("//app//wby//RNN.h5", compile=False)
 
     if LABEL_MODEL :
         with st.spinner(text="##### 正在处理数据..."):
             data = pre_process(data)
+            st.dataframe(data)
             train_x_dict, price_scaler_max,price_scaler_min = generate_sequence(data,WINDOW_SIZE)
             predicted_max,predicted_min,predicted_label = make_prediction(model,train_x_dict,price_scaler_min,price_scaler_max)
             st.success('🚩已完成')
             
         # check model performance
-        max_chart_data = pd.DataFrame({'预测最高值':[float(i) for i in predicted_max] , '真实最高值':data.High.tolist()[WINDOW_SIZE-1:]})
+        max_chart_data = pd.DataFrame({'预测最高值':[float(i) for i in predicted_max] , '真实最高值':data[f'max_{WINDOW_SIZE}'].tolist()[:len(data) - WINDOW_SIZE+1]})
         st.markdown('### 预测最高值验证:')
         st.line_chart(max_chart_data)
 
-        max_chart_data = pd.DataFrame({'预测最低值':[float(i) for i in predicted_min] , '真实最低值':data.Low.tolist()[WINDOW_SIZE-1:]})
+        min_chart_data = pd.DataFrame({'预测最低值':[float(i) for i in predicted_min] , '真实最低值':data[f'min_{WINDOW_SIZE}'].tolist()[:len(data) - WINDOW_SIZE+1]})
         st.markdown('### 预测最低值验证:')
-        st.line_chart(max_chart_data)
+        st.line_chart(min_chart_data)
             
