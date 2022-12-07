@@ -128,7 +128,7 @@ with tab3:
     LABEL_MODEL = st.button('RNN模型预测')
 
     # file path "//app//wby//RNN.h5"
-    model = keras.models.load_model("C:\\Users\\HFY\\Desktop\\app\\Bi_RNN.h5", compile=False)
+    model = keras.models.load_model("//app//wby//Bi_RNN.h5", compile=False)
 
     if LABEL_MODEL :
         with st.spinner(text="##### 正在处理数据..."):
