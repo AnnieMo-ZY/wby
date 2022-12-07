@@ -9,5 +9,5 @@ pandas_ta
 scikit-learn
 keras
 tensorflow
-pyechart
+pyecharts
 streamlit_echarts
