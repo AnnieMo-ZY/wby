@@ -94,11 +94,8 @@ with tab0:
     st.dataframe(data.iloc[::-1], height=600,use_container_width = True)
 
 with tab1:
+    # K线图 Echart
     st_pyecharts(g,width="100%", height='900px')
-    st.markdown('#### 假如RSI处于超卖区域并开始上穿30水平,则你需要寻找看涨的反转烛台形态。此时为买入信号')
-    st.markdown('#### 如果RSI处于超买区域并开始下穿70水平,则需要开始观察寻找看跌反转烛台。此时为做空信号')
-    rsi_fig = F.RSI_plot(data)
-    st.plotly_chart(rsi_fig,use_container_width = True)
 
 with tab2:
     col1, col2, col3, col4 = st.columns(4)
