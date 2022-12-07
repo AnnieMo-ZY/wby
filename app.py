@@ -35,8 +35,8 @@ st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 st.markdown('# 📈AI Guided Financial Trading Dashboard')
 
-st.markdown('#### 通过检测Long Term Moving Average(长期移动均线)与Short Term Moving Average(短期移动均线)交叉的交易情况,')
-st.markdown('#### 结合RSI,MACD,WR等11类技术指标对交易市场,使用RNN(循环神经网络),Transfomer(注意力机制)模型,对下一时刻的最高价/最低价进行预测,以及预测进场时机')
+st.markdown('#### 检测Long Term Moving Average(长期移动均线)与Short Term Moving Average(短期移动均线)')
+st.markdown('#### RNN(循环神经网络),对下一时刻的最高价/最低价进行预测,以及预测进场时机')
 st.markdown('***原模型训练集为2018~2020年外汇市场M15货币数据***')
 
 # handle data input / select perfer stock 
@@ -45,7 +45,8 @@ STOCK = yf.Ticker('XPEV')
 
 if stock_name:
     STOCK = yf.Ticker(stock_name)
-
+else:
+    pass
 data = STOCK.history(interval = "15m")
 data['Datetime'] = data.index
 data['Datetime'] = data['Datetime'].astype(str)
@@ -65,7 +66,9 @@ g = (Kline(init_opts=opts.InitOpts(width="900px", height='500px'))
         .set_global_opts(
         #标题
         title_opts =opts.TitleOpts(title = f'{stock_name} K线图',
-        subtitle = '15M',pos_left = 'left',title_textstyle_opts = opts.TextStyleOpts(font_size=28)),
+        subtitle = '15M',pos_left = 'left',
+        title_textstyle_opts = opts.TextStyleOpts(font_size=35),
+        subtitle_textstyle_opts = opts.TextStyleOpts(font_size=28),),
         # 图例
         legend_opts=opts.LegendOpts(
             is_show=False, pos_bottom=10, pos_left="center"),
@@ -95,6 +98,7 @@ with tab0:
 
 with tab1:
     # K线图 Echart
+    
     st_pyecharts(g,width="100%", height='900px')
 
 with tab2:
@@ -124,7 +128,7 @@ with tab3:
     LABEL_MODEL = st.button('RNN模型预测')
 
     # file path "//app//wby//RNN.h5"
-    model = keras.models.load_model("//app//wby//RNN.h5", compile=False)
+    model = keras.models.load_model("C:\\Users\\HFY\\Desktop\\app\\Bi_RNN.h5", compile=False)
 
     if LABEL_MODEL :
         with st.spinner(text="##### 正在处理数据..."):
