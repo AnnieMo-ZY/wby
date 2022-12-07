@@ -135,12 +135,17 @@ with tab3:
             
         # check model performance
         max_chart_data = pd.DataFrame({'预测最高值':[float(i) for i in predicted_max] , '真实最高值':data[f'max_{WINDOW_SIZE}'].tolist()[:len(data) - WINDOW_SIZE+1]})
-        st.markdown('### 预测最高值验证:')
-        st.line_chart(max_chart_data)
-
         min_chart_data = pd.DataFrame({'预测最低值':[float(i) for i in predicted_min] , '真实最低值':data[f'min_{WINDOW_SIZE}'].tolist()[:len(data) - WINDOW_SIZE+1]})
-        st.markdown('### 预测最低值验证:')
-        st.line_chart(min_chart_data)
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown('### 预测最高值验证:')
+            st.line_chart(max_chart_data, use_container_width = True)
+        with col2:
+            st.markdown('### 预测最低值验证:')
+            st.line_chart(min_chart_data, use_container_width = True)
+        
+        
         marker_ls = F.label_to_marker(data,predicted_label)
         h = (Kline(init_opts=opts.InitOpts(width="900px", height='500px'))
                 .add_xaxis(data['Datetime'].tolist()) 
