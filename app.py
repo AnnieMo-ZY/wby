@@ -14,6 +14,12 @@ import time
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import load_model
 import os
+# new
+from pyecharts.charts import *
+from pyecharts import options as opts
+from streamlit_echarts import st_pyecharts
+
+
 st.set_page_config(page_title = '📈 AI Guided Trading System',layout = 'wide')
 def get_wr(high, low, close, lookback):
     highh = high.rolling(lookback).max() 
