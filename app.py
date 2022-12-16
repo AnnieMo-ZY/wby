@@ -33,7 +33,7 @@ hide_streamlit_style = """
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-st.markdown('# 📈AI Guided Financial Trading Dashboard')
+st.markdown('# 📈AI Guided Financial Trading Application')
 
 # st.markdown('#### 检测Long Term Moving Average(长期移动均线)与Short Term Moving Average(短期移动均线)')
 st.markdown('### RNN(循环神经网络),对下一时刻的最高价/最低价进行预测,以及预测进场时机')
