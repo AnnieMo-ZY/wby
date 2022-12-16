@@ -35,9 +35,9 @@ st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 st.markdown('# 📈AI Guided Financial Trading Dashboard')
 
-st.markdown('#### 检测Long Term Moving Average(长期移动均线)与Short Term Moving Average(短期移动均线)')
-st.markdown('#### RNN(循环神经网络),对下一时刻的最高价/最低价进行预测,以及预测进场时机')
-st.markdown('***原模型训练集为2018~2020年外汇市场M15货币数据***')
+# st.markdown('#### 检测Long Term Moving Average(长期移动均线)与Short Term Moving Average(短期移动均线)')
+st.markdown('### RNN(循环神经网络),对下一时刻的最高价/最低价进行预测,以及预测进场时机')
+# st.markdown('***原模型训练集为2018~2020年外汇市场M15货币数据***')
 
 # handle data input / select perfer stock 
 stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: https://finance.yahoo.com/lookup/')
@@ -45,8 +45,7 @@ STOCK = yf.Ticker('XPEV')
 
 if stock_name:
     STOCK = yf.Ticker(stock_name)
-else:
-    pass
+    
 data = STOCK.history(interval = "15m")
 data['Datetime'] = data.index
 data['Datetime'] = data['Datetime'].astype(str)
@@ -54,31 +53,44 @@ data['Datetime'] = data['Datetime'].astype(str)
 # convert to Asia timezone
 # data['Datetime'] = pd.DataFrame(pd.to_datetime(data['Datetime'] ,utc=True).tz_convert('Asia/Shanghai')).index
 data = F.pre_process(data)
+# K线图
 g = (Kline(init_opts=opts.InitOpts(width="900px", height='500px'))
         .add_xaxis(data['Datetime'].tolist()) 
         #y轴数据，默认open、close、low、high，转为list格式
         .add_yaxis("",y_axis=data[['Open', 'Close', 'Low', 'High']].values.tolist(),
+        # 设置烛台颜色
         itemstyle_opts=opts.ItemStyleOpts(
         color="rgb(205,51,0)",#阳线红色 涨 #FF0000
         color0="rgb(69,139,116)",#阴线绿色 跌 #32CD32
         border_color="rgb(205,51,0)",
-        border_color0="rgb(69,139,116)",),)
+        border_color0="rgb(69,139,116)",),
+        # 显示辅助线 均价
+        markline_opts=opts.MarkLineOpts(
+        data=[opts.MarkLineItem(name='平均价格',type_="average", value_dim='close')]))
+
         .set_global_opts(
         #标题
         title_opts =opts.TitleOpts(title = f'{stock_name} K线图',
+        #副标题
         subtitle = '15M',pos_left = 'left',
         title_textstyle_opts = opts.TextStyleOpts(font_size=35),
         subtitle_textstyle_opts = opts.TextStyleOpts(font_size=28),),
         # 图例
         legend_opts=opts.LegendOpts(
             is_show=False, pos_bottom=10, pos_left="center"),
+        #
+        xaxis_opts=opts.AxisOpts(is_scale=True),
+        yaxis_opts=opts.AxisOpts(is_scale=True,),
+
+        # 浮动十字辅助线
+        tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="cross",is_show_content=True),
         # 缩放
         datazoom_opts=[
             opts.DataZoomOpts(
                 is_show=False,
                 type_="inside",
                 xaxis_index=[0, 1],
-                range_start=98,
+                range_start=95,
                 range_end=100,
             ),
             opts.DataZoomOpts(
@@ -98,26 +110,25 @@ with tab0:
 
 with tab1:
     # K线图 Echart
-    
     st_pyecharts(g,width="100%", height='900px')
 
 with tab2:
     col1, col2, col3, col4 = st.columns(4)
-
-    col1.metric(str(data['Datetime'].values[-2])[11:-6] + " 开盘价", str(data.Open.values[-2])[0:7], str(data.Open.values[-2] -data.Open.values[-3])[0:7])
-    col2.metric(str(data['Datetime'].values[-2])[11:-6] + " 收盘价", str(data.Close.values[-2])[0:7],  str(data.Close.values[-2] -data.Close.values[-3])[0:7])
-    col3.metric(str(data['Datetime'].values[-2])[11:-6] + " 最高价", str(data.High.values[-2])[0:7], str(data.High.values[-2] -data.High.values[-3])[0:7])
-    col4.metric(str(data['Datetime'].values[-2])[11:-6] + " 最低价", str(data.Low.values[-2])[0:7], str(data.Low.values[-2] -data.Low.values[-3])[0:7])
     
-    col1.metric(str(data['Datetime'].values[-2])[11:-6] + " RSI15", str(data.RSI_15.values[-2])[0:7], str(data.RSI_15.values[-2] - data.RSI_15.values[-3])[0:7])
-    col2.metric(str(data['Datetime'].values[-2])[11:-6] + " WR15", str(data.wr15.values[-2])[0:7],  str(data.wr15.values[-2] - data.wr15.values[-3])[0:7])
-    col3.metric(str(data['Datetime'].values[-2])[11:-6] + " ATR15", str(data.atr15.values[-2])[0:7], str(data.atr15.values[-2] -data.atr15.values[-3])[0:7])
-    col4.metric(str(data['Datetime'].values[-2])[11:-6] + " SMA15", str(data.sma15.values[-2])[0:7], str(data.sma15.values[-2] -data.sma15.values[-3])[0:7])
+    col1.metric(" 开盘价", str(data.Open.values[-2])[0:7], str(data.Open.values[-2] -data.Open.values[-3])[0:7])
+    col2.metric(" 收盘价", str(data.Close.values[-2])[0:7],  str(data.Close.values[-2] -data.Close.values[-3])[0:7])
+    col3.metric(" 最高价", str(data.High.values[-2])[0:7], str(data.High.values[-2] -data.High.values[-3])[0:7])
+    col4.metric(" 最低价", str(data.Low.values[-2])[0:7], str(data.Low.values[-2] -data.Low.values[-3])[0:7])
+    
+    col1.metric(" RSI15", str(data.RSI_15.values[-2])[0:7], str(data.RSI_15.values[-2] - data.RSI_15.values[-3])[0:7])
+    col2.metric(" WR15", str(data.wr15.values[-2])[0:7],  str(data.wr15.values[-2] - data.wr15.values[-3])[0:7])
+    col3.metric(" ATR15", str(data.atr15.values[-2])[0:7], str(data.atr15.values[-2] -data.atr15.values[-3])[0:7])
+    col4.metric( " SMA15", str(data.sma15.values[-2])[0:7], str(data.sma15.values[-2] -data.sma15.values[-3])[0:7])
 
-    col1.metric(str(data['Datetime'].values[-2])[11:-6] + " RSI25", str(data.RSI_25.values[-2])[0:7], str(data.RSI_25.values[-2] - data.RSI_25.values[-3])[0:7])
-    col2.metric(str(data['Datetime'].values[-2])[11:-6] + " WR25", str(data.wr25.values[-2])[0:7],  str(data.wr25.values[-2] - data.wr25.values[-3])[0:7])
-    col3.metric(str(data['Datetime'].values[-2])[11:-6] + " ATR25", str(data.atr25.values[-2])[0:7], str(data.atr15.values[-2] -data.atr25.values[-3])[0:7])
-    col4.metric(str(data['Datetime'].values[-2])[11:-6] + " SMA25", str(data.sma25.values[-2])[0:7], str(data.sma15.values[-2] -data.sma25.values[-3])[0:7])
+    col1.metric(" RSI25", str(data.RSI_25.values[-2])[0:7], str(data.RSI_25.values[-2] - data.RSI_25.values[-3])[0:7])
+    col2.metric(" WR25", str(data.wr25.values[-2])[0:7],  str(data.wr25.values[-2] - data.wr25.values[-3])[0:7])
+    col3.metric(" ATR25", str(data.atr25.values[-2])[0:7], str(data.atr15.values[-2] -data.atr25.values[-3])[0:7])
+    col4.metric(" SMA25", str(data.sma25.values[-2])[0:7], str(data.sma15.values[-2] -data.sma25.values[-3])[0:7])
 
 with tab3:
     WINDOW_SIZE = 10
