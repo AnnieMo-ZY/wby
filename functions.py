@@ -10,9 +10,7 @@ from datetime import date
 import pandas_ta as ta
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
-import time
 from sklearn.preprocessing import MinMaxScaler
-from keras.models import load_model
 import os
 # new
 from pyecharts.charts import *
@@ -44,6 +42,41 @@ def label_min_max(df, ws):
     df[f'max_{ws}']=local_max
     df.dropna(inplace=True)
     return df
+
+def pre_process(data,window_size):
+    data.reset_index(inplace = True,drop = True)
+    # calculate sma
+    data['sma'] = data['Close'].rolling(20).mean()
+    # calculate standard deviation
+    data['sd'] = data['Close'].rolling(20).std()
+    # calculate lower band
+    data['lb'] = data['sma'] - 2 * data['sd']
+    # calculate upper band
+    data['ub'] = data['sma'] + 2 * data['sd']
+    data.ta.rsi(close='Close', length=15, append=True, signal_indicators=True)
+    data.ta.rsi(close='Close', length=25, append=True, signal_indicators=True)
+    data.ta.rsi(close='Close', length=35, append=True, signal_indicators=True)
+    data['wr15'] = get_wr(data['High'],data['Low'],data['Close'],15)
+    data['wr25'] = get_wr(data['High'],data['Low'],data['Close'],25)
+    data['wr35'] = get_wr(data['High'],data['Low'],data['Close'],35)
+    data['atr15'] = ta.atr(data.High,data.Low,data.Close,window=15,fillna=False)
+    data['atr25'] = ta.atr(data.High,data.Low,data.Close,window=25,fillna=False)
+    data['atr35'] = ta.atr(data.High,data.Low,data.Close,window=35,fillna=False)
+    data['sma15'] = data['Close'].rolling(15).mean()
+    data['sma25'] = data['Close'].rolling(25).mean()
+    data['sma35'] = data['Close'].rolling(35).mean()
+    data.ta.stoch(high=data.High, low=data.Low, k=14, d=3, append=True)
+    event(data,data.High,data.Low, data.lb, data.ub, data.sma,len(data.High))
+    MA_PRGY_Task(data)
+    GRYP_IDX = {}
+    for idx, value in enumerate( list(data.event.unique())):
+        GRYP_IDX[value] = idx
+    data['event'].replace(GRYP_IDX, inplace= True)
+    data = label_min_max(data,window_size)
+    data.replace({'' : 0}, inplace = True)
+    data.dropna(subset=['ratio top','RSI_35',f'min_{window_size}'],inplace=True)
+    return data
+
 # detect bb_event
 def event(df,high,low, lower_band, upper_band, middle_band,l):
 
@@ -124,41 +157,6 @@ def event(df,high,low, lower_band, upper_band, middle_band,l):
     df['bb_event8'] = df.apply(lambda l: event_8(high,low, middle_band,l.name), axis=1)
     
 
-
-
-def pre_process(data,window_size):
-    data.reset_index(inplace = True,drop = True)
-    # calculate sma
-    data['sma'] = data['Close'].rolling(20).mean()
-    # calculate standard deviation
-    data['sd'] = data['Close'].rolling(20).std()
-    # calculate lower band
-    data['lb'] = data['sma'] - 2 * data['sd']
-    # calculate upper band
-    data['ub'] = data['sma'] + 2 * data['sd']
-    data.ta.rsi(close='Close', length=15, append=True, signal_indicators=True)
-    data.ta.rsi(close='Close', length=25, append=True, signal_indicators=True)
-    data.ta.rsi(close='Close', length=35, append=True, signal_indicators=True)
-    data['wr15'] = get_wr(data['High'],data['Low'],data['Close'],15)
-    data['wr25'] = get_wr(data['High'],data['Low'],data['Close'],25)
-    data['wr35'] = get_wr(data['High'],data['Low'],data['Close'],35)
-    data['atr15'] = ta.atr(data.High,data.Low,data.Close,window=15,fillna=False)
-    data['atr25'] = ta.atr(data.High,data.Low,data.Close,window=25,fillna=False)
-    data['atr35'] = ta.atr(data.High,data.Low,data.Close,window=35,fillna=False)
-    data['sma15'] = data['Close'].rolling(15).mean()
-    data['sma25'] = data['Close'].rolling(25).mean()
-    data['sma35'] = data['Close'].rolling(35).mean()
-    data.ta.stoch(high=data.High, low=data.Low, k=14, d=3, append=True)
-    event(data,data.High,data.Low, data.lb, data.ub, data.sma,len(data.High))
-    MA_PRGY_Task(data)
-    GRYP_IDX = {}
-    for idx, value in enumerate( list(data.event.unique())):
-        GRYP_IDX[value] = idx
-    data['event'].replace(GRYP_IDX, inplace= True)
-    data = label_min_max(data,window_size)
-    data.replace({'' : 0}, inplace = True)
-    data.dropna(subset=['ratio top','RSI_35',f'min_{window_size}'],inplace=True)
-    return data
 
 
 def compare(Close,Red,Green,Yellow):
@@ -299,9 +297,8 @@ def MA_PRGY_Task(data):
     data['Y'] = Y_ls
 
 def generate_sequence(data, window_size):
-    train_dt_ori, train_dt_scaled, target_minprice, target_maxprice, target_minp_scaled,\
-    target_maxp_scaled, price_scaler_max, price_scaler_min = [], [], [], [], [], [], [], []
-    train_dt_GRYP,train_dt_distance,ta_indicators,target_bhs,macd_1,macd_2 = [],[],[],[],[],[]
+    train_dt_ori, train_dt_scaled, price_scaler_max, price_scaler_min = [], [], [], []
+    train_dt_GRYP,train_dt_distance,ta_indicators,r, g,y,bb_event = [],[],[],[],[],[],[]
 
     scaler = MinMaxScaler()
     scaler_a = MinMaxScaler()
@@ -314,6 +311,11 @@ def generate_sequence(data, window_size):
             train_dt_ori.append(data.loc[index:window_size-1+index, ['Open', 'High', 'Low', 'Close']].values)
             # GRYP Categorical
             train_dt_GRYP.append(data.loc[index:window_size-1+index, ['event']].values)
+            r.append(data.loc[index:window_size-1+index, ['R']].values)
+            g.append(data.loc[index:window_size-1+index, ['G']].values)
+            y.append(data.loc[index:window_size-1+index, ['Y']].values)
+            bb_event.append(data.loc[index:window_size-1+index, ['bb_event1','bb_event2','bb_event3','bb_event4',
+                                                        'bb_event5','bb_event6','bb_event7','bb_event8']].values)
             # macd_1.append(data.loc[index:window_size-1+index, ['dir_change']].values)
 
             # numerical feature min max scale
@@ -339,14 +341,19 @@ def generate_sequence(data, window_size):
     # np.array convert correct data types
     train_arr_ohlc_scaled = np.array(train_dt_scaled).astype('float32')
     train_arr_GRYP = np.array(train_dt_GRYP).astype('int64')
-
+    r = np.array(r).astype('int64')
+    g = np.array(g).astype('int64')
+    y = np.array(y).astype('int64')
+    bb_event = np.array(bb_event).astype('float32')
     train_arr_distance = np.array(train_dt_distance).astype('float32')
     ta_indicators =  np.array(ta_indicators).astype('float32')
 
     # TrainSet Features
     train_x_dict = {
-        'OHLC':train_arr_ohlc_scaled,'GRYP': train_arr_GRYP,'DISTANCE': train_arr_distance, "TAINDICATORS" : ta_indicators
+        'OHLC':train_arr_ohlc_scaled,'GRYP': train_arr_GRYP,'DISTANCE': train_arr_distance, "TAINDICATORS" : ta_indicators,
+        'R':r ,'G':g ,'Y':y , 'BB' : bb_event
     }
+
     # TrainSet Ylabel
     # train_y_dict = {'minp': target_minpArr_scaled, 'maxp': target_maxpArr_scaled, 'bhs':target_arr_bhs}
     
@@ -470,8 +477,6 @@ def label_to_marker(data,predicted_label):
         if predicted_label[i] == 2:
             marker_ls.append(opts.MarkPointItem(coord=[data['Datetime'].tolist()[i], data['High'].tolist()[i] + 0.05], value="做空"))
     return marker_ls
-
-
 
 
 def draw_Kline(data,stock_name):
