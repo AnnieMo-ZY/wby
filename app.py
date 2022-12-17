@@ -92,7 +92,7 @@ with tab3:
 
     if LABEL_MODEL :
         with st.spinner(text="##### 正在处理数据..."):
-            data = F.pre_process(data)
+#             data = F.pre_process(data,WINDOW_SIZE)
             train_x_dict, price_scaler_max,price_scaler_min = F.generate_sequence(data,WINDOW_SIZE)
             predicted_max,predicted_min,predicted_label = F.make_prediction(model,train_x_dict,price_scaler_min,price_scaler_max)
             st.success('🚩已完成')
