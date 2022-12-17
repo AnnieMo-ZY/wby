@@ -24,7 +24,7 @@ import functions as F
 #https://www.heywhale.com/mw/project/5eb7958f366f4d002d783d4a
 st.set_page_config(page_title = '📈 AI Guided Trading System',layout = 'wide')
 
-    
+WINDOW_SIZE = 10
 hide_streamlit_style = """
             <style>
             #MainMenu {visibility: hidden;}
@@ -42,75 +42,25 @@ st.markdown(f'### ***{time.asctime()}***')
 # handle data input / select perfer stock 
 stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: https://finance.yahoo.com/lookup/')
 STOCK = yf.Ticker('XPEV')
-
 if stock_name:
     STOCK = yf.Ticker(stock_name)
-    
+
 data = STOCK.history(interval = "15m")
 data['Datetime'] = data.index
 data['Datetime'] = data['Datetime'].astype(str)
-
 # convert to Asia timezone
 # data['Datetime'] = pd.DataFrame(pd.to_datetime(data['Datetime'] ,utc=True).tz_convert('Asia/Shanghai')).index
-data = F.pre_process(data)
-# K线图
-g = (Kline(init_opts=opts.InitOpts(width="900px", height='500px'))
-        .add_xaxis(data['Datetime'].tolist()) 
-        #y轴数据，默认open、close、low、high，转为list格式
-        .add_yaxis("",y_axis=data[['Open', 'Close', 'Low', 'High']].values.tolist(),
-        # 设置烛台颜色
-        itemstyle_opts=opts.ItemStyleOpts(
-        color="rgb(205,51,0)",#阳线红色 涨 #FF0000
-        color0="rgb(69,139,116)",#阴线绿色 跌 #32CD32
-        border_color="rgb(205,51,0)",
-        border_color0="rgb(69,139,116)",),
-        # 显示辅助线 均价
-        markline_opts=opts.MarkLineOpts(
-        data=[opts.MarkLineItem(name='平均价格',type_="average", value_dim='close')]))
-
-        .set_global_opts(
-        #标题
-        title_opts =opts.TitleOpts(title = f'{stock_name} K线图',
-        #副标题
-        subtitle = '15M',pos_left = 'left',
-        title_textstyle_opts = opts.TextStyleOpts(font_size=35),
-        subtitle_textstyle_opts = opts.TextStyleOpts(font_size=28),),
-        # 图例
-        legend_opts=opts.LegendOpts(
-            is_show=False, pos_bottom=10, pos_left="center"),
-        #
-        xaxis_opts=opts.AxisOpts(is_scale=True),
-        yaxis_opts=opts.AxisOpts(is_scale=True,),
-
-        # 浮动十字辅助线
-        tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="cross",is_show_content=True),
-        # 缩放
-        datazoom_opts=[
-            opts.DataZoomOpts(
-                is_show=False,
-                type_="inside",
-                xaxis_index=[0, 1],
-                range_start=95,
-                range_end=100,
-            ),
-            opts.DataZoomOpts(
-                is_show=True,
-                xaxis_index=[0, 1],
-                type_="slider",
-                pos_top="85%",
-                range_start=98,
-                range_end=100,)
-                ,],)       
-    )
-
+data = F.pre_process(data,WINDOW_SIZE)
 
 tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
+
 with tab0:
     st.dataframe(data.iloc[::-1], height=600,use_container_width = True)
 
 with tab1:
+    overlap_kline_line = F.draw_Kline(data,stock_name)
     # K线图 Echart
-    st_pyecharts(g,width="100%", height='900px')
+    st_pyecharts(overlap_kline_line,width="100%", height='900px')
 
 with tab2:
     col1, col2, col3, col4 = st.columns(4)
@@ -131,7 +81,6 @@ with tab2:
     col4.metric(" SMA25", str(data.sma25.values[-2])[0:7], str(data.sma15.values[-2] -data.sma25.values[-3])[0:7])
 
 with tab3:
-    WINDOW_SIZE = 10
     
     st.markdown('### 模型特征: ')
     st.dataframe(data)
