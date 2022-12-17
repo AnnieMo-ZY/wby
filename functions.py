@@ -377,9 +377,9 @@ def label_to_marker(data,predicted_label):
     for i in range(len(predicted_label)):
         # label 1=buy 2=sell
         if predicted_label[i] == 1:
-            marker_ls.append(opts.MarkPointItem(coord=[data['Datetime'].tolist()[i], data['Low'].tolist()[i] - 0.15], value="做多"))
+            marker_ls.append(opts.MarkPointItem(coord=[data['Datetime'].tolist()[i], data['Low'].tolist()[i] - 0.05], value="做多"))
         if predicted_label[i] == 2:
-            marker_ls.append(opts.MarkPointItem(coord=[data['Datetime'].tolist()[i], data['High'].tolist()[i] + 0.15], value="做空"))
+            marker_ls.append(opts.MarkPointItem(coord=[data['Datetime'].tolist()[i], data['High'].tolist()[i] + 0.05], value="做空"))
     return marker_ls
 
 
