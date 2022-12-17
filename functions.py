@@ -381,3 +381,96 @@ def label_to_marker(data,predicted_label):
         if predicted_label[i] == 2:
             marker_ls.append(opts.MarkPointItem(coord=[data['Datetime'].tolist()[i], data['High'].tolist()[i] + 0.15], value="做空"))
     return marker_ls
+
+
+
+
+def draw_Kline(data,stock_name):
+    MA200 = data['Close'].rolling(window =200).mean()
+    # moving average 100
+    MA100 = data['Close'].rolling(window =100).mean()
+    # moving average 14
+    MA14 = data['Close'].rolling(window =14).mean()
+
+    line = (
+            Line()
+            .add_xaxis(xaxis_data=data["Datetime"])
+            .add_yaxis(
+                series_name="MA14",
+                y_axis=MA14,
+                is_smooth=True,
+                is_hover_animation=False,
+                linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.5),
+                label_opts=opts.LabelOpts(is_show=False),)
+            .add_yaxis(
+                series_name="MA100",
+                y_axis=MA100,
+                is_smooth=True,
+                is_hover_animation=False,
+                linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.5),
+                label_opts=opts.LabelOpts(is_show=False),)
+            .add_yaxis(
+                series_name="MA200",
+                y_axis=MA200,
+                is_smooth=True,
+                is_hover_animation=True,
+                linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.5),
+                label_opts=opts.LabelOpts(is_show=False),)
+            )
+
+
+    g = (Kline(init_opts=opts.InitOpts(width="900px", height='500px'))
+            .add_xaxis(data['Datetime'].tolist()) 
+            
+            #y轴数据，默认open、close、low、high，转为list格式
+            .add_yaxis("",y_axis=data[['Open', 'Close', 'Low', 'High']].values.tolist(),
+            # 设置烛台颜色
+            itemstyle_opts=opts.ItemStyleOpts(
+            color="rgb(205,51,0)",#阳线红色 涨 #FF0000
+            color0="rgb(69,139,116)",#阴线绿色 跌 #32CD32
+            border_color="rgb(205,51,0)",
+            border_color0="rgb(69,139,116)",),
+            # 显示辅助线 均价
+            markline_opts=opts.MarkLineOpts(
+            data=[opts.MarkLineItem(name='平均价格',type_="average", value_dim='close')]))
+
+            .set_global_opts(
+            #标题
+            title_opts =opts.TitleOpts(title = f'{stock_name} K线图',
+            #副标题
+            subtitle = '15M',pos_left = 'left',
+            title_textstyle_opts = opts.TextStyleOpts(font_size=35),
+            subtitle_textstyle_opts = opts.TextStyleOpts(font_size=28),),
+            # 图例
+            legend_opts=opts.LegendOpts(
+                is_show=True, 
+                pos_top=20,
+                pos_left="center",item_width =30 ,item_height=25 ,
+                textstyle_opts = opts.TextStyleOpts(font_size = 20)),
+            #
+            xaxis_opts=opts.AxisOpts(is_scale=True),
+            yaxis_opts=opts.AxisOpts(is_scale=True,),
+
+            # 浮动十字辅助线
+            tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="cross",is_show_content=True),
+            # 缩放
+            datazoom_opts=[
+                opts.DataZoomOpts(
+                    is_show=False,
+                    type_="inside",
+                    xaxis_index=[0, 1],
+                    range_start=95,
+                    range_end=100,
+                ),
+                opts.DataZoomOpts(
+                    is_show=True,
+                    xaxis_index=[0, 1],
+                    type_="slider",
+                    pos_top="85%",
+                    range_start=98,
+                    range_end=100,)
+                    ,],)       
+        )
+
+    overlap_kline_line = g.overlap(line)
+    return overlap_kline_line
