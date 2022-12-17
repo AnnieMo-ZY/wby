@@ -44,6 +44,87 @@ def label_min_max(df, ws):
     df[f'max_{ws}']=local_max
     df.dropna(inplace=True)
     return df
+# detect bb_event
+def event(df,high,low, lower_band, upper_band, middle_band,l):
+
+    # Outside the lower BB
+
+    def event_1(high, lower_band):
+        if high < lower_band:
+            return 1
+        else:
+            return 0
+
+    df['bb_event1'] = np.vectorize(event_1)(high, lower_band)
+
+    # Outside the upper BB
+    def event_2(low, upper_band):
+        if low > upper_band:
+            return 1
+        else:
+            return 0
+
+    df['bb_event2'] = np.vectorize(event_2)(low, upper_band)
+
+    # Touches the lower BB
+    def event_3(high, lower_band):
+        if 0.9999*lower_band < high < 1.0001*lower_band:
+            return 1
+        else:
+            return 0
+
+    df['bb_event3'] = np.vectorize(event_3)(high, lower_band)
+
+
+    # Touches the upper BB
+    def event_4(low, upper_band):
+        if 0.9999*upper_band < low < 1.0001*upper_band:
+            return 1
+        else:
+            return 0
+
+    df['bb_event4'] = np.vectorize(event_4)(low, upper_band)
+
+    # Touches the middle BB from Top
+    def event_5(high, middle_band):
+        if 0.9999*middle_band < high < 1.0001*middle_band:
+            return 1
+        else:
+            return 0
+
+    df['bb_event5'] = np.vectorize(event_5)(high, middle_band)
+
+    # Touches the middle BB from Bottom
+    def event_6(low, middle_band):
+        if 0.9999*middle_band < low < 1.0001*middle_band:
+            return 1
+        else:
+            return 0
+
+    df['bb_event6'] = np.vectorize(event_6)(low, middle_band)
+
+    # Crosses the middle BB from Top towards Bottom
+    def event_7(high,low, middle_band,l): 
+        if l-1<=19:
+            return 0
+        if low[l]<middle_band[l] and middle_band[l]<high[l] and middle_band[l+1]<middle_band[l] and middle_band[l-1]>middle_band[l]:
+            return 1
+        else:
+            return 0
+    df['bb_event7'] = df.apply(lambda l: event_7(high,low, middle_band,l.name), axis=1)
+
+    # Crosses the middle BB from Bottom towards Top
+    def event_8(high,low, middle_band,l): 
+        if l-1<=19:
+            return 0
+        if low[l]<middle_band[l] and middle_band[l]<high[l] and middle_band[l+1]>middle_band[l] and middle_band[l-1]<middle_band[l]:
+            return 1
+        else:
+            return 0
+    df['bb_event8'] = df.apply(lambda l: event_8(high,low, middle_band,l.name), axis=1)
+    
+
+
 
 def pre_process(data,window_size):
     data.reset_index(inplace = True,drop = True)
