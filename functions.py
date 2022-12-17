@@ -1,4 +1,3 @@
-
 import streamlit as st
 import yfinance as yf
 import numpy as np
@@ -46,8 +45,16 @@ def label_min_max(df, ws):
     df.dropna(inplace=True)
     return df
 
-def pre_process(data):
+def pre_process(data,window_size):
     data.reset_index(inplace = True,drop = True)
+    # calculate sma
+    data['sma'] = data['Close'].rolling(20).mean()
+    # calculate standard deviation
+    data['sd'] = data['Close'].rolling(20).std()
+    # calculate lower band
+    data['lb'] = data['sma'] - 2 * data['sd']
+    # calculate upper band
+    data['ub'] = data['sma'] + 2 * data['sd']
     data.ta.rsi(close='Close', length=15, append=True, signal_indicators=True)
     data.ta.rsi(close='Close', length=25, append=True, signal_indicators=True)
     data.ta.rsi(close='Close', length=35, append=True, signal_indicators=True)
@@ -61,16 +68,17 @@ def pre_process(data):
     data['sma25'] = data['Close'].rolling(25).mean()
     data['sma35'] = data['Close'].rolling(35).mean()
     data.ta.stoch(high=data.High, low=data.Low, k=14, d=3, append=True)
-    
+    event(data,data.High,data.Low, data.lb, data.ub, data.sma,len(data.High))
     MA_PRGY_Task(data)
     GRYP_IDX = {}
     for idx, value in enumerate( list(data.event.unique())):
         GRYP_IDX[value] = idx
     data['event'].replace(GRYP_IDX, inplace= True)
-    data = label_min_max(data,10)
+    data = label_min_max(data,window_size)
     data.replace({'' : 0}, inplace = True)
-    data.dropna(subset=['ratio top','RSI_35','min_10'],inplace=True)
+    data.dropna(subset=['ratio top','RSI_35',f'min_{window_size}'],inplace=True)
     return data
+
 
 def compare(Close,Red,Green,Yellow):
 
