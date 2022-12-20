@@ -39,6 +39,7 @@ st.markdown('# 📈AI Guided Financial Trading Application')
 st.markdown('### RNN(循环神经网络),对下一时刻的最高价/最低价进行预测,以及预测进场时机')
 # st.markdown('***原模型训练集为2018~2020年外汇市场M15货币数据***')
 st.markdown(f'### ***{time.asctime()}***')
+st.markdown(f'{time.localtime().tm_zone}')
 # handle data input / select perfer stock 
 stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: https://finance.yahoo.com/lookup/')
 STOCK = yf.Ticker('XPEV')
