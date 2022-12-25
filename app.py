@@ -19,7 +19,7 @@ from pyecharts.charts import *
 from pyecharts import options as opts
 from streamlit_echarts import st_pyecharts
 import functions as F
-
+from iFinDPy import *
 # pyechart tutorial
 #https://www.heywhale.com/mw/project/5eb7958f366f4d002d783d4a
 st.set_page_config(page_title = '📈 AI Guided Trading System',layout = 'wide')
