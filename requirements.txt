@@ -11,4 +11,5 @@ keras
 tensorflow
 pyecharts
 streamlit_echarts
-iFinD
+request
+json
