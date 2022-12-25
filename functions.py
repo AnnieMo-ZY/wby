@@ -17,6 +17,27 @@ from pyecharts.charts import *
 from pyecharts import options as opts
 from streamlit_echarts import st_pyecharts
 
+def login():
+    login_info = THS_iFinDLogin('my3013','406919')
+    if login_info == 0:
+        st.write('登陆成功')
+        st.json(THS_DataStatistics())
+    else:
+        THS_iFinDLogout()
+        st.write('登陆失败')
+        
+def handle_ifind_data(code = "HC2301.SHF"):
+    # "RB2305"
+    data_result = THS_HQ(code,'open;high;low;close;volume','','2022-01-01', str(datetime.now().date()))
+    if data_result.errorcode == 0:
+        data = data_result.data
+        data['Datetime'] = data.time
+        data.rename(columns={'close' : 'Close', 'open':'Open' , 'high' : 'High' , 'low':'Low'},errors='raise',inplace=True)
+        return data
+    else:
+        print(data_result.errmsg)
+        st.write(data_result.errmsg)
+
 def get_wr(high, low, close, lookback):
     highh = high.rolling(lookback).max() 
     lowl = low.rolling(lookback).min()
