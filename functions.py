@@ -17,6 +17,76 @@ from pyecharts.charts import *
 from pyecharts import options as opts
 from streamlit_echarts import st_pyecharts
 from iFinDPy import *
+import requests
+import json
+import time
+
+# Token accessToken 及权限校验机制
+getAccessTokenUrl = 'https://quantapi.51ifind.com/api/v1/get_access_token'
+# 获取refresh_token需下载Windows版本接口包解压，打开超级命令-工具-refresh_token查询
+refreshtoken = 'eyJzaWduX3RpbWUiOiIyMDIyLTEyLTI1IDE5OjI1OjAxIn0=.eyJ1aWQiOiI2NjA1NzQ4MTYifQ==.770C980E4BFCAD438B549ADCFA5CF9AE6A9A2E2559F2E3174ADBF507C9A5D11E'
+getAccessTokenHeader = {"Content- Type": "application/json", "refresh_token": refreshtoken}
+getAccessTokenResponse = requests.post(url=getAccessTokenUrl, headers=getAccessTokenHeader)
+accessToken = json.loads(getAccessTokenResponse.content)['data']['access_token']
+print(accessToken)
+thsHeaders = {"Content-Type": "application/json", "access_token": accessToken}
+
+# 历史行情：获取历史的日频行情数据
+def history_quotes(code ="000001.SZ"):
+    thsUrl = 'https://quantapi.51ifind.com/api/v1/cmd_history_quotation'
+    thsPara = {"codes":
+                   code,
+               "indicators":
+                   "open,high,low,close,volume",
+               "startdate":
+                   "2022-01-05",
+               "enddate":
+                   str(datetime.now().date()),
+               "functionpara":
+                   {"Fill": "Blank"}
+               }
+    thsResponse = requests.post(url=thsUrl, json=thsPara, headers=thsHeaders)
+    data = json.loads(thsResponse.content)
+    result = Trans2df(data)
+    result['Datetime'] = result.time
+    result.rename(columns={'table.close' : 'Close', 'table.open':'Open' , 'table.high' : 'High' , 'table.low':'Low','table.volume':'volume'},
+                            errors='raise',inplace=True)
+    return result
+
+
+# 实时行情：循环获取最新行情数据
+def real_time(code = "HC2301.SHF"):
+    thsUrl = 'https://quantapi.51ifind.com/api/v1/real_time_quotation'
+    thsPara = {"codes": code, "indicators": "latest"}
+    # while True:
+    thsResponse = requests.post(url=thsUrl, json=thsPara, headers=thsHeaders)
+    data = json.loads(thsResponse.content)
+    result = pd.json_normalize(data['tables'])
+    result = result.drop(columns=['pricetype'])
+    result = result.apply(lambda x: x.explode().astype(str).groupby(level=0).agg(", ".join))
+    print(result)
+    st.table(result)
+    # do your thing here
+
+# json结构体转dataframe
+def Trans2df(data):
+    df = pd.json_normalize(data['tables'])
+    df2 = df.set_index(['thscode'])
+
+    unnested_lst = []
+    for col in df2.columns:
+        unnested_lst.append(df2[col].apply(pd.Series).stack())
+
+    result = pd.concat(unnested_lst, axis=1, keys=df2.columns)
+    # result = result.reset_index(drop=True)
+    # 设置二级索引
+    result = result.reset_index()
+    result = result.set_index(['thscode', 'time'])
+    # 格式化,行转列
+    result = result.drop(columns=['level_1'])
+    result = result.reset_index()
+    return (result)
+
 
 def login():
     login_info = THS_iFinDLogin('my3013','406919')
@@ -26,7 +96,7 @@ def login():
     else:
         THS_iFinDLogout()
         st.write('登陆失败')
-        
+
 def handle_ifind_data(code = "HC2301.SHF"):
     # "RB2305"
     data_result = THS_HQ(code,'open;high;low;close;volume','','2022-01-01', str(datetime.now().date()))
@@ -38,6 +108,8 @@ def handle_ifind_data(code = "HC2301.SHF"):
     else:
         print(data_result.errmsg)
         st.write(data_result.errmsg)
+
+
 
 def get_wr(high, low, close, lookback):
     highh = high.rolling(lookback).max() 
@@ -66,7 +138,7 @@ def label_min_max(df, ws):
     return df
 
 def pre_process(data,window_size):
-    data.reset_index(inplace = True,drop = True)
+    data.reset_index(inplace = True)
     # calculate sma
     data['sma'] = data['Close'].rolling(20).mean()
     # calculate standard deviation
@@ -254,18 +326,18 @@ def MA_PRGY_Task(data):
     # add 4 columns to the dataframe
     data['event'] = ''
 
-    Ratio_top_ls = ['' for i in range(200)]
-    Ratio_mid_ls = ['' for i in range(200)]
-    Ratio_bottom_ls = ['' for i in range(200)]
+    Ratio_top_ls = [0 for i in range(200)]
+    Ratio_mid_ls = [0 for i in range(200)]
+    Ratio_bottom_ls = [0 for i in range(200)]
 
-    Absolute_top_ls = ['' for i in range(200)]
-    Absolute_mid_ls = ['' for i in range(200)]
-    Absolute_bottom_ls = ['' for i in range(200)]
+    Absolute_top_ls = [0 for i in range(200)]
+    Absolute_mid_ls = [0 for i in range(200)]
+    Absolute_bottom_ls = [0 for i in range(200)]
 
     # columns if MA is within low and high return 1, not in range return 0
-    R_ls = ['' for i in range(200)]
-    G_ls = ['' for i in range(200)]
-    Y_ls = ['' for i in range(200)]
+    R_ls = [0 for i in range(200)]
+    G_ls = [0 for i in range(200)]
+    Y_ls = [0 for i in range(200)]
 
     label_list = []
     for i in (range(200,len(data),1)):
