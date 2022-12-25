@@ -35,12 +35,9 @@ hide_streamlit_style = """
             </style>
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-
 st.markdown('# 📈AI Guided Financial Trading Dashboard')
-
 st.markdown('#### 检测Long Term Moving Average(长期移动均线)与Short Term Moving Average(短期移动均线)')
 st.markdown('#### RNN(循环神经网络),对下一时刻的最高价/最低价进行预测,以及预测进场时机')
-
 st.markdown('##### >输入股票代号获取数据') 
 
 
@@ -76,15 +73,14 @@ data = F.history_quotes(stock_name)
 data = F.pre_process(data,WINDOW_SIZE)
 tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
 with tab0:
-    F.real_time()
-    #st.dataframe(data, height=600,use_container_width = True)
+    st.dataframe(data, height=600,use_container_width = True)
+
 with tab1:
     refresh = st.button('刷新K线图')
     if refresh:
         overlap_kline_line = F.draw_Kline(data,stock_name)
         # K线图 Echart
         st_pyecharts(overlap_kline_line,width="100%", height='900px')
-
 
 with tab2:
     col1, col2, col3, col4 = st.columns(4)
