@@ -21,8 +21,7 @@ from streamlit_echarts import st_pyecharts
 import functions as F
 import requests
 import json
-# update data source
-# from iFinDPy import *
+
 
 # pyechart tutorial
 #https://www.heywhale.com/mw/project/5eb7958f366f4d002d783d4a
