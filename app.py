@@ -66,23 +66,18 @@ thsHeaders = {"Content-Type": "application/json", "access_token": accessToken}
 # data['Datetime'] = data['Datetime'].astype(str)
 ########################################################################
 
-button = st.button('刷新登录按钮')
+# button = st.button('刷新登录按钮')
 stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: https://finance.yahoo.com/lookup/',value = 'HC2301.SHF')
-if button:
-    F.login()
-
+# if button:
+#     F.login()
 
 # data = F.handle_ifind_data(stock_name)
 data = F.history_quotes(stock_name)
-# convert to Asia timezone
-# data['Datetime'] = pd.DataFrame(pd.to_datetime(data['Datetime'] ,utc=True).tz_convert('Asia/Shanghai')).index
 data = F.pre_process(data,WINDOW_SIZE)
-
 tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
 with tab0:
     F.real_time()
     #st.dataframe(data, height=600,use_container_width = True)
-
 with tab1:
     refresh = st.button('刷新K线图')
     if refresh:
