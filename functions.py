@@ -16,6 +16,7 @@ import os
 from pyecharts.charts import *
 from pyecharts import options as opts
 from streamlit_echarts import st_pyecharts
+from iFinDPy import *
 
 def login():
     login_info = THS_iFinDLogin('my3013','406919')
