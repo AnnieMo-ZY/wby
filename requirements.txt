@@ -11,4 +11,4 @@ keras
 tensorflow
 pyecharts
 streamlit_echarts
-iFinDPy
+RestIFindPy
