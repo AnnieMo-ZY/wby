@@ -32,57 +32,60 @@ hide_streamlit_style = """
             </style>
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+st.markdown('# 📈AI Guided Financial Trading Dashboard')
+st.markdown('#### 检测Long Term Moving Average(长期移动均线)与Short Term Moving Average(短期移动均线)')
+st.markdown('#### RNN(循环神经网络),对下一时刻的最高价/最低价进行预测,以及预测进场时机')
 
-st.markdown('# 📈AI Guided Financial Trading Application')
-
-# st.markdown('#### 检测Long Term Moving Average(长期移动均线)与Short Term Moving Average(短期移动均线)')
-st.markdown('### RNN(循环神经网络),对下一时刻的最高价/最低价进行预测,以及预测进场时机')
-# st.markdown('***原模型训练集为2018~2020年外汇市场M15货币数据***')
-st.markdown(f'### ***{time.asctime()}***')
-st.markdown(f'{time.localtime().tm_zone}')
+###########################################################################
 # handle data input / select perfer stock 
-stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: https://finance.yahoo.com/lookup/')
-STOCK = yf.Ticker('XPEV')
-if stock_name:
-    STOCK = yf.Ticker(stock_name)
+button = st.button('刷新登录按钮')
+stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: https://finance.yahoo.com/lookup/',value = 'HC2301.SHF')
+if button:
+    F.login()
+# STOCK = yf.Ticker('XPEV')
+# if stock_name:
+#     STOCK = yf.Ticker(stock_name)
+# data = STOCK.history(interval = "15m")
+# data['Datetime'] = data.index
+# data['Datetime'] = data['Datetime'].astype(str)
+########################################################################
 
-data = STOCK.history(interval = "15m")
-data['Datetime'] = data.index
-data['Datetime'] = data['Datetime'].astype(str)
+data = F.handle_ifind_data(stock_name)
 # convert to Asia timezone
 # data['Datetime'] = pd.DataFrame(pd.to_datetime(data['Datetime'] ,utc=True).tz_convert('Asia/Shanghai')).index
 data = F.pre_process(data,WINDOW_SIZE)
 
 tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
-
 with tab0:
-    st.dataframe(data.iloc[::-1], height=600,use_container_width = True)
+    st.dataframe(data, height=600,use_container_width = True)
 
 with tab1:
-    overlap_kline_line = F.draw_Kline(data,stock_name)
-    # K线图 Echart
-    st_pyecharts(overlap_kline_line,width="100%", height='900px')
+    refresh = st.button('刷新K线图')
+    if refresh:
+        overlap_kline_line = F.draw_Kline(data,stock_name)
+        # K线图 Echart
+        st_pyecharts(overlap_kline_line,width="100%", height='900px')
 
 with tab2:
     col1, col2, col3, col4 = st.columns(4)
-    
-    col1.metric(" 开盘价", str(data.Open.values[-2])[0:7], str(data.Open.values[-2] -data.Open.values[-3])[0:7])
-    col2.metric(" 收盘价", str(data.Close.values[-2])[0:7],  str(data.Close.values[-2] -data.Close.values[-3])[0:7])
-    col3.metric(" 最高价", str(data.High.values[-2])[0:7], str(data.High.values[-2] -data.High.values[-3])[0:7])
-    col4.metric(" 最低价", str(data.Low.values[-2])[0:7], str(data.Low.values[-2] -data.Low.values[-3])[0:7])
-    
+    col1.metric(" 开盘价", str(data.Open.values[-1])[0:7], str(data.Open.values[-1] -data.Open.values[-2])[0:7])
+    col2.metric(" 收盘价", str(data.Close.values[-1])[0:7],  str(data.Close.values[-1] -data.Close.values[-2])[0:7])
+    col3.metric(" 最高价", str(data.High.values[-1])[0:7], str(data.High.values[-1] -data.High.values[-2])[0:7])
+    col4.metric(" 最低价", str(data.Low.values[-1])[0:7], str(data.Low.values[-1] -data.Low.values[-2])[0:7])
+    col1.metric(" 交易量", str(data.volume.values[-1])[0:7], str(data.volume.values[-1] - data.volume.values[-2])[0:7])
+
+
+    # col2.metric(" WR25", str(data.wr25.values[-2])[0:7],  str(data.wr25.values[-1] - data.wr25.values[-2])[0:7])
+    # col3.metric(" ATR25", str(data.atr25.values[-2])[0:7], str(data.atr15.values[-1] -data.atr25.values[-2])[0:7])
+    # col4.metric(" SMA25", str(data.sma25.values[-2])[0:7], str(data.sma15.values[-1] -data.sma25.values[-2])[0:7])
+    st.markdown('<div> <hr> </div>',unsafe_allow_html=True)
+    col1, col2, col3, col4 = st.columns(4)
     col1.metric(" RSI15", str(data.RSI_15.values[-2])[0:7], str(data.RSI_15.values[-2] - data.RSI_15.values[-3])[0:7])
     col2.metric(" WR15", str(data.wr15.values[-2])[0:7],  str(data.wr15.values[-2] - data.wr15.values[-3])[0:7])
     col3.metric(" ATR15", str(data.atr15.values[-2])[0:7], str(data.atr15.values[-2] -data.atr15.values[-3])[0:7])
     col4.metric( " SMA15", str(data.sma15.values[-2])[0:7], str(data.sma15.values[-2] -data.sma15.values[-3])[0:7])
 
-    col1.metric(" RSI25", str(data.RSI_25.values[-2])[0:7], str(data.RSI_25.values[-2] - data.RSI_25.values[-3])[0:7])
-    col2.metric(" WR25", str(data.wr25.values[-2])[0:7],  str(data.wr25.values[-2] - data.wr25.values[-3])[0:7])
-    col3.metric(" ATR25", str(data.atr25.values[-2])[0:7], str(data.atr15.values[-2] -data.atr25.values[-3])[0:7])
-    col4.metric(" SMA25", str(data.sma25.values[-2])[0:7], str(data.sma15.values[-2] -data.sma25.values[-3])[0:7])
-
 with tab3:
-    
     st.markdown('### 模型特征: ')
     st.dataframe(data)
 
@@ -93,7 +96,7 @@ with tab3:
 
     if LABEL_MODEL :
         with st.spinner(text="##### 正在处理数据..."):
-#             data = F.pre_process(data,WINDOW_SIZE)
+            data = F.pre_process(data,WINDOW_SIZE)
             train_x_dict, price_scaler_max,price_scaler_min = F.generate_sequence(data,WINDOW_SIZE)
             predicted_max,predicted_min,predicted_label = F.make_prediction(model,train_x_dict,price_scaler_min,price_scaler_max)
             st.success('🚩已完成')
