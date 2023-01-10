@@ -16,10 +16,10 @@ import os
 from pyecharts.charts import *
 from pyecharts import options as opts
 from streamlit_echarts import st_pyecharts
+from iFinDPy import *
 import requests
 import json
 import time
-from datetime import datetime
 
 # Token accessToken 及权限校验机制
 getAccessTokenUrl = 'https://quantapi.51ifind.com/api/v1/get_access_token'
@@ -32,14 +32,14 @@ print(accessToken)
 thsHeaders = {"Content-Type": "application/json", "access_token": accessToken}
 
 # 历史行情：获取历史的日频行情数据
-def history_quotes(code ="000001.SZ"):
+def history_quotes(code ="HC2305.SHF"):
     thsUrl = 'https://quantapi.51ifind.com/api/v1/cmd_history_quotation'
     thsPara = {"codes":
                    code,
                "indicators":
                    "open,high,low,close,volume",
                "startdate":
-                   "2022-01-05",
+                   "2021-03-05",
                "enddate":
                    str(datetime.now().date()),
                "functionpara":
@@ -55,7 +55,7 @@ def history_quotes(code ="000001.SZ"):
 
 
 # 实时行情：循环获取最新行情数据
-def real_time(code = "HC2301.SHF"):
+def real_time(code = "HC2305.SHF"):
     thsUrl = 'https://quantapi.51ifind.com/api/v1/real_time_quotation'
     thsPara = {"codes": code, "indicators": "latest"}
     # while True:
@@ -97,9 +97,9 @@ def login():
         THS_iFinDLogout()
         st.write('登陆失败')
 
-def handle_ifind_data(code = "HC2301.SHF"):
+def handle_ifind_data(code = "HC2305.SHF"):
     # "RB2305"
-    data_result = THS_HQ(code,'open;high;low;close;volume','','2022-01-01', str(datetime.now().date()))
+    data_result = THS_HQ(code,'open;high;low;close;volume','','2019-01-01', str(datetime.now().date()))
     if data_result.errorcode == 0:
         data = data_result.data
         data['Datetime'] = data.time
@@ -131,7 +131,7 @@ def label_min_max(df, ws):
         local_max = np.append(local_max, df.High.iloc[i:i+ws].max()) 
     for i in range(ws):
         local_min = np.append(local_min, df.Low.iloc[-ws:].min()) 
-        local_max = np.append(local_max, df.High.iloc[-ws:].min()) 
+        local_max = np.append(local_max, df.High.iloc[-ws:].max()) 
     df[f'min_{ws}']=local_min
     df[f'max_{ws}']=local_max
     df.dropna(inplace=True)
@@ -163,7 +163,7 @@ def pre_process(data,window_size):
     event(data,data.High,data.Low, data.lb, data.ub, data.sma,len(data.High))
     MA_PRGY_Task(data)
     GRYP_IDX = {}
-    for idx, value in enumerate( list(data.event.unique())):
+    for idx, value in enumerate(list(data.event.unique())):
         GRYP_IDX[value] = idx
     data['event'].replace(GRYP_IDX, inplace= True)
     data = label_min_max(data,window_size)
@@ -175,13 +175,11 @@ def pre_process(data,window_size):
 def event(df,high,low, lower_band, upper_band, middle_band,l):
 
     # Outside the lower BB
-
     def event_1(high, lower_band):
         if high < lower_band:
             return 1
         else:
             return 0
-
     df['bb_event1'] = np.vectorize(event_1)(high, lower_band)
 
     # Outside the upper BB
@@ -190,7 +188,6 @@ def event(df,high,low, lower_band, upper_band, middle_band,l):
             return 1
         else:
             return 0
-
     df['bb_event2'] = np.vectorize(event_2)(low, upper_band)
 
     # Touches the lower BB
@@ -199,7 +196,6 @@ def event(df,high,low, lower_band, upper_band, middle_band,l):
             return 1
         else:
             return 0
-
     df['bb_event3'] = np.vectorize(event_3)(high, lower_band)
 
 
@@ -209,7 +205,6 @@ def event(df,high,low, lower_band, upper_band, middle_band,l):
             return 1
         else:
             return 0
-
     df['bb_event4'] = np.vectorize(event_4)(low, upper_band)
 
     # Touches the middle BB from Top
@@ -218,7 +213,6 @@ def event(df,high,low, lower_band, upper_band, middle_band,l):
             return 1
         else:
             return 0
-
     df['bb_event5'] = np.vectorize(event_5)(high, middle_band)
 
     # Touches the middle BB from Bottom
@@ -227,7 +221,6 @@ def event(df,high,low, lower_band, upper_band, middle_band,l):
             return 1
         else:
             return 0
-
     df['bb_event6'] = np.vectorize(event_6)(low, middle_band)
 
     # Crosses the middle BB from Top towards Bottom
@@ -316,8 +309,8 @@ def within_price_range(Low,High,MA):
 
 def MA_PRGY_Task(data):  
 
-    # moving average 200
-    MA200 = data['Close'].rolling(window =200).mean()
+    # moving average 75
+    MA75 = data['Close'].rolling(window =75).mean()
     # moving average 100
     MA100 = data['Close'].rolling(window =100).mean()
     # moving average 14
@@ -326,25 +319,25 @@ def MA_PRGY_Task(data):
     # add 4 columns to the dataframe
     data['event'] = ''
 
-    Ratio_top_ls = [0 for i in range(200)]
-    Ratio_mid_ls = [0 for i in range(200)]
-    Ratio_bottom_ls = [0 for i in range(200)]
+    Ratio_top_ls = [0 for i in range(100)]
+    Ratio_mid_ls = [0 for i in range(100)]
+    Ratio_bottom_ls = [0 for i in range(100)]
 
-    Absolute_top_ls = [0 for i in range(200)]
-    Absolute_mid_ls = [0 for i in range(200)]
-    Absolute_bottom_ls = [0 for i in range(200)]
+    Absolute_top_ls = [0 for i in range(100)]
+    Absolute_mid_ls = [0 for i in range(100)]
+    Absolute_bottom_ls = [0 for i in range(100)]
 
     # columns if MA is within low and high return 1, not in range return 0
-    R_ls = [0 for i in range(200)]
-    G_ls = [0 for i in range(200)]
-    Y_ls = [0 for i in range(200)]
+    R_ls = [0 for i in range(100)]
+    G_ls = [0 for i in range(100)]
+    Y_ls = [0 for i in range(100)]
 
     label_list = []
-    for i in (range(200,len(data),1)):
+    for i in (range(100,len(data),1)):
         Price = data.Close[i]
         Low = data.Low[i]
         High = data.High[i]
-        Red = MA200[i]
+        Red = MA75[i]
         Green = MA100[i]
         Yellow = MA14[i]
         # return event label
@@ -367,7 +360,7 @@ def MA_PRGY_Task(data):
     
         # first label append to the list start at 200 
         if len(label_list) == 0:
-            data['event'][200] = label
+            data['event'][100] = label
         label_list.append(label)
 
         if len(label_list) > 1:
@@ -470,7 +463,7 @@ def stock_price_visualize(data,stock_name):
     x = [i for i in range(data.shape[0])]
 
     # moving average 200
-    MA200 = data['Close'].rolling(window =200).mean()
+    MA200 = data['Close'].rolling(window =75).mean()
     # moving average 100
     MA100 = data['Close'].rolling(window =100).mean()
     # moving average 14
@@ -574,7 +567,7 @@ def label_to_marker(data,predicted_label):
 
 
 def draw_Kline(data,stock_name):
-    MA200 = data['Close'].rolling(window =200).mean()
+    MA70 = data['Close'].rolling(window =70).mean()
     # moving average 100
     MA100 = data['Close'].rolling(window =100).mean()
     # moving average 14
@@ -598,8 +591,8 @@ def draw_Kline(data,stock_name):
                 linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.5),
                 label_opts=opts.LabelOpts(is_show=False),)
             .add_yaxis(
-                series_name="MA200",
-                y_axis=MA200,
+                series_name="MA70",
+                y_axis=MA70,
                 is_smooth=True,
                 is_hover_animation=True,
                 linestyle_opts=opts.LineStyleOpts(width=3, opacity=0.5),
