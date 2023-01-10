@@ -2,18 +2,13 @@ import streamlit as st
 import yfinance as yf
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
 import warnings
 from tensorflow import keras
 warnings.filterwarnings('ignore')
 from datetime import date
 import pandas_ta as ta
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
 import time
-from sklearn.preprocessing import MinMaxScaler
 from keras.models import load_model
-import os
 # new
 from pyecharts.charts import *
 from pyecharts import options as opts
@@ -63,13 +58,18 @@ thsHeaders = {"Content-Type": "application/json", "access_token": accessToken}
 # data['Datetime'] = data['Datetime'].astype(str)
 ########################################################################
 
-stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: https://finance.yahoo.com/lookup/',value = 'HC2301.SHF')
+# button = st.button('刷新登录按钮')
+stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: https://finance.yahoo.com/lookup/',value = 'HC2305.SHF')
+# if button:
+#     F.login()
+
+# data = F.handle_ifind_data(stock_name)
 data = F.history_quotes(stock_name)
 data = F.pre_process(data,WINDOW_SIZE)
 tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
 with tab0:
-#     st.dataframe(data, height=600,use_container_width = True)
-    F.real_time()
+    st.dataframe(data, height=600,use_container_width = True)
+
 with tab1:
     refresh = st.button('刷新K线图')
     if refresh:
@@ -97,17 +97,18 @@ with tab2:
     col4.metric( " SMA15", str(data.sma15.values[-2])[0:7], str(data.sma15.values[-2] -data.sma15.values[-3])[0:7])
 
 with tab3:
+    
     st.markdown('### 模型特征: ')
     st.dataframe(data)
 
     LABEL_MODEL = st.button('RNN模型预测')
 
     # file path "//app//wby//RNN.h5"
-    model = keras.models.load_model("//app//wby//Bi_RNN.h5", compile=False)
+    model = keras.models.load_model("C:\\Users\\HFY\\Desktop\\app\\RNN.h5", compile=False)
 
     if LABEL_MODEL :
         with st.spinner(text="##### 正在处理数据..."):
-            data = F.pre_process(data,WINDOW_SIZE)
+            # data = F.pre_process(data,WINDOW_SIZE)
             train_x_dict, price_scaler_max,price_scaler_min = F.generate_sequence(data,WINDOW_SIZE)
             predicted_max,predicted_min,predicted_label = F.make_prediction(model,train_x_dict,price_scaler_min,price_scaler_max)
             st.success('🚩已完成')
@@ -171,4 +172,4 @@ with tab3:
                         ,],)       
             )
 
-        st_pyecharts(h,width="100%", height='500px')
+        st_pyecharts(h,width="100%", height='900px')
