@@ -16,7 +16,6 @@ import os
 from pyecharts.charts import *
 from pyecharts import options as opts
 from streamlit_echarts import st_pyecharts
-from iFinDPy import *
 import requests
 import json
 import time
