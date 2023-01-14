@@ -76,7 +76,7 @@ with tab0:
 with tab1:
     refresh = st.button('刷新K线图')
     if refresh:
-        overlap_kline_line = F.draw_Kline(data,stock_name)
+        overlap_kline_line = F.draw_Kline(data,stock_name,cycle_select)
         # K线图 Echart
         st_pyecharts(overlap_kline_line,width="100%", height='900px')
 
@@ -152,7 +152,7 @@ with tab3:
                 .set_global_opts(
                 #标题
                 title_opts =opts.TitleOpts(title = f'{stock_name} K线图',
-                subtitle = '15M',pos_left = 'left',title_textstyle_opts = opts.TextStyleOpts(font_size=28)),
+                subtitle = cycle_select,pos_left = 'left',title_textstyle_opts = opts.TextStyleOpts(font_size=28)),
                 # 图例
                 legend_opts=opts.LegendOpts(
                     is_show=False, pos_bottom=10, pos_left="center"),
