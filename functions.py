@@ -549,57 +549,57 @@ def stock_price_visualize(data,stock_name):
     # fig.show()
     return fig
 
-def RSI_plot(data):
+# def RSI_plot(data):
 
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_width=[0.25, 0.75])
-    x = [i for i in range(data.shape[0])]
-    fig.add_trace(go.Candlestick(
-        x=x,
-        open=data['Open'],
-        high=data['High'],
-        low=data['Low'],
-        close=data['Close'],
-        increasing_line_color='#ff9900',
-        decreasing_line_color='black',
-        showlegend=False
-    ))
+#     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_width=[0.25, 0.75])
+#     x = [i for i in range(data.shape[0])]
+#     fig.add_trace(go.Candlestick(
+#         x=x,
+#         open=data['Open'],
+#         high=data['High'],
+#         low=data['Low'],
+#         close=data['Close'],
+#         increasing_line_color='#ff9900',
+#         decreasing_line_color='black',
+#         showlegend=False
+#     ))
 
-    # Make RSI Plot
-    fig.add_trace(go.Scatter(
-        x=x,
-        y=data['RSI_15'],
-        line=dict(color='#ff9900', width=2),
-        showlegend=False,
-    ), row=2, col=1
-    )
-    # Add upper/lower bounds
-    fig.update_yaxes(range=[-10, 110], row=2, col=1)
-    fig.add_hline(y=0, col=1, row=2, line_color="#666", line_width=2)
-    fig.add_hline(y=100, col=1, row=2, line_color="#666", line_width=2)
+#     # Make RSI Plot
+#     fig.add_trace(go.Scatter(
+#         x=x,
+#         y=data['RSI_15'],
+#         line=dict(color='#ff9900', width=2),
+#         showlegend=False,
+#     ), row=2, col=1
+#     )
+#     # Add upper/lower bounds
+#     fig.update_yaxes(range=[-10, 110], row=2, col=1)
+#     fig.add_hline(y=0, col=1, row=2, line_color="#666", line_width=2)
+#     fig.add_hline(y=100, col=1, row=2, line_color="#666", line_width=2)
 
-    # Add overbought/oversold
-    fig.add_hline(y=30, col=1, row=2, line_color='#336699', line_width=2, line_dash='dash')
-    fig.add_hline(y=70, col=1, row=2, line_color='#336699', line_width=2, line_dash='dash')
+#     # Add overbought/oversold
+#     fig.add_hline(y=30, col=1, row=2, line_color='#336699', line_width=2, line_dash='dash')
+#     fig.add_hline(y=70, col=1, row=2, line_color='#336699', line_width=2, line_dash='dash')
 
-    # Customize font, colors, hide range slider
-    layout = go.Layout(
-        title = 'RSI15交易策略',
-        plot_bgcolor='#efefef',
-        # Font Families
-        font_family='Monospace',
-        font_color='#000000',
-        font_size=18,
-        xaxis=dict(
-            rangeslider=dict(
-                visible=False
-            )
-        )
-    )
-    fig.update_layout(layout)
-    # update and display
-    fig.update_layout(layout)
-    # fig.show()
-    return fig
+#     # Customize font, colors, hide range slider
+#     layout = go.Layout(
+#         title = 'RSI15交易策略',
+#         plot_bgcolor='#efefef',
+#         # Font Families
+#         font_family='Monospace',
+#         font_color='#000000',
+#         font_size=18,
+#         xaxis=dict(
+#             rangeslider=dict(
+#                 visible=False
+#             )
+#         )
+#     )
+#     fig.update_layout(layout)
+#     # update and display
+#     fig.update_layout(layout)
+#     # fig.show()
+#     return fig
 
 def label_to_marker(data,predicted_label):
     marker_ls = []
@@ -612,7 +612,7 @@ def label_to_marker(data,predicted_label):
     return marker_ls
 
 
-def draw_Kline(data,stock_name):
+def draw_Kline(data,stock_name,cycle_select):
     MA70 = data['Close'].rolling(window =70).mean()
     # moving average 100
     MA100 = data['Close'].rolling(window =100).mean()
@@ -665,7 +665,7 @@ def draw_Kline(data,stock_name):
             #标题
             title_opts =opts.TitleOpts(title = f'{stock_name} K线图',
             #副标题
-            subtitle = '15M',pos_left = 'left',
+            subtitle ='周期:'+cycle_select,pos_left = 'left',
             title_textstyle_opts = opts.TextStyleOpts(font_size=35),
             subtitle_textstyle_opts = opts.TextStyleOpts(font_size=28),),
             # 图例
