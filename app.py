@@ -31,9 +31,10 @@ hide_streamlit_style = """
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 st.markdown('# 📈AI Guided Financial Trading Dashboard')
-st.markdown('#### 检测Long Term Moving Average(长期移动均线)与Short Term Moving Average(短期移动均线)')
-st.markdown('#### RNN(循环神经网络),对下一时刻的最高价/最低价进行预测,以及预测进场时机')
-st.markdown('##### >输入股票代号获取数据') 
+st.markdown('#### 均线+K线图')
+st.markdown('#### RNN(循环神经网络),对下一周期的最高价/最低价进行预测,以及预测进场时机')
+st.markdown('##### >输入股票代号获取数据')
+st.markdown('热卷2305代号: HC2305.SHF \n')
 
 
 ###########################################################################
@@ -58,16 +59,22 @@ thsHeaders = {"Content-Type": "application/json", "access_token": accessToken}
 # data['Datetime'] = data['Datetime'].astype(str)
 ########################################################################
 
-# button = st.button('刷新登录按钮')
 stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: https://finance.yahoo.com/lookup/',value = 'HC2305.SHF')
-# if button:
-#     F.login()
+tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
+cycle_select = st.radio('周期选择', options = ['30分钟','1小时','1天'],horizontal=True)
 
-# data = F.handle_ifind_data(stock_name)
-data = F.history_quotes(stock_name)
-data = F.pre_process(data,WINDOW_SIZE)
+
 tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
 with tab0:
+    if cycle_select == '1天':
+        data = F.history_quotes(cycle_select,stock_name)
+        data = F.pre_process(data,WINDOW_SIZE)
+    elif cycle_select == '1小时':
+        data = F.history_quotes(cycle_select,stock_name)
+        data = F.pre_process(data,WINDOW_SIZE) 
+    elif cycle_select == '30分钟':
+        data = F.history_quotes(cycle_select,stock_name)
+        data = F.pre_process(data,WINDOW_SIZE)        
     st.dataframe(data, height=600,use_container_width = True)
 
 with tab1:
