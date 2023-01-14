@@ -45,7 +45,6 @@ refreshtoken = 'eyJzaWduX3RpbWUiOiIyMDIyLTEyLTI1IDE5OjI1OjAxIn0=.eyJ1aWQiOiI2NjA
 getAccessTokenHeader = {"Content- Type": "application/json", "refresh_token": refreshtoken}
 getAccessTokenResponse = requests.post(url=getAccessTokenUrl, headers=getAccessTokenHeader)
 accessToken = json.loads(getAccessTokenResponse.content)['data']['access_token']
-print(accessToken)
 thsHeaders = {"Content-Type": "application/json", "access_token": accessToken}
 ###########################################################################
 
@@ -58,13 +57,10 @@ thsHeaders = {"Content-Type": "application/json", "access_token": accessToken}
 # data['Datetime'] = data.index
 # data['Datetime'] = data['Datetime'].astype(str)
 ########################################################################
-
-stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: https://finance.yahoo.com/lookup/',value = 'HC2305.SHF')
-tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
+stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: 同花顺',value = 'HC2305.SHF')
 cycle_select = st.radio('周期选择', options = ['30分钟','1小时','1天'],horizontal=True)
-
-
 tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
+
 with tab0:
     if cycle_select == '1天':
         data = F.history_quotes(cycle_select,stock_name)
