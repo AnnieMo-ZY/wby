@@ -31,26 +31,73 @@ print(accessToken)
 thsHeaders = {"Content-Type": "application/json", "access_token": accessToken}
 
 # 历史行情：获取历史的日频行情数据
-def history_quotes(code ="HC2305.SHF"):
-    thsUrl = 'https://quantapi.51ifind.com/api/v1/cmd_history_quotation'
-    thsPara = {"codes":
-                   code,
-               "indicators":
-                   "open,high,low,close,volume",
-               "startdate":
-                   "2021-03-05",
-               "enddate":
-                   str(datetime.now().date()),
-               "functionpara":
-                   {"Fill": "Blank"}
-               }
-    thsResponse = requests.post(url=thsUrl, json=thsPara, headers=thsHeaders)
-    data = json.loads(thsResponse.content)
-    result = Trans2df(data)
-    result['Datetime'] = result.time
-    result.rename(columns={'table.close' : 'Close', 'table.open':'Open' , 'table.high' : 'High' , 'table.low':'Low','table.volume':'volume'},
-                            errors='raise',inplace=True)
-    return result
+def history_quotes(cycle,code ="HC2305.SHF"):
+    if cycle == '1天':
+        thsUrl = 'https://quantapi.51ifind.com/api/v1/cmd_history_quotation'
+        thsPara = {"codes":
+                    code,
+                "indicators":
+                    "open,high,low,close,volume",
+                "startdate":
+                    "2021-03-05",
+                "enddate":
+                    str(datetime.now().date()),
+                "functionpara":
+                    {"Fill": "Blank",
+                    'Interval':cycle}
+                }
+        thsResponse = requests.post(url=thsUrl, json=thsPara, headers=thsHeaders)
+        data = json.loads(thsResponse.content)
+        result = Trans2df(data)
+        result['Datetime'] = result.time
+        result.rename(columns={'table.close' : 'Close', 'table.open':'Open' , 'table.high' : 'High' , 'table.low':'Low','table.volume':'volume'},
+                                errors='raise',inplace=True)
+        return result
+
+    elif cycle == '1小时':
+        thsUrl = 'https://quantapi.51ifind.com/api/v1/high_frequency'
+        thsPara = {"codes":
+                    code,
+                "indicators":
+                    "open,high,low,close,volume",
+                "starttime":
+                    "2022-12-01 09:15:00",
+                "endtime":
+                    str(datetime.now().date())+' 24:00:00',
+                    "functionpara":
+                    {"Fill": "Blank",
+                    'Interval':60}}
+        thsResponse = requests.post(url=thsUrl, json=thsPara, headers=thsHeaders)
+        data = json.loads(thsResponse.content)
+        result = Trans2df(data)
+        result['Datetime'] = result.time
+        result.rename(columns={'table.close' : 'Close', 'table.open':'Open' , 'table.high' : 'High' , 'table.low':'Low','table.volume':'volume'},
+                                errors='raise',inplace=True)
+        # print(result)
+        # print(thsResponse.content)
+        return result
+    elif cycle == '30分钟':
+        thsUrl = 'https://quantapi.51ifind.com/api/v1/high_frequency'
+        thsPara = {"codes":
+                    code,
+                "indicators":
+                    "open,high,low,close,volume",
+                "starttime":
+                    "2022-12-01 09:15:00",
+                "endtime":
+                    str(datetime.now().date())+' 24:00:00',
+                    "functionpara":
+                    {"Fill": "Blank",
+                    'Interval':30}}
+        thsResponse = requests.post(url=thsUrl, json=thsPara, headers=thsHeaders)
+        data = json.loads(thsResponse.content)
+        result = Trans2df(data)
+        result['Datetime'] = result.time
+        result.rename(columns={'table.close' : 'Close', 'table.open':'Open' , 'table.high' : 'High' , 'table.low':'Low','table.volume':'volume'},
+                                errors='raise',inplace=True)
+        # print(result)
+        # print(thsResponse.content)
+        return result
 
 
 # 实时行情：循环获取最新行情数据
