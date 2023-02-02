@@ -22,6 +22,11 @@ import json
 #https://www.heywhale.com/mw/project/5eb7958f366f4d002d783d4a
 st.set_page_config(page_title = '📈 AI Guided Trading System',layout = 'wide')
 
+
+######
+import tushare
+st.write('tushare版本' + ts.__version__)
+######
 WINDOW_SIZE = 10
 hide_streamlit_style = """
             <style>
