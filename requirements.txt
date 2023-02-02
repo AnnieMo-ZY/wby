@@ -12,3 +12,4 @@ tensorflow
 pyecharts
 streamlit_echarts
 requests
+tushare
