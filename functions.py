@@ -20,15 +20,15 @@ import requests
 import json
 # import time
 
-# Token accessToken 及权限校验机制
-getAccessTokenUrl = 'https://quantapi.51ifind.com/api/v1/get_access_token'
-# 获取refresh_token需下载Windows版本接口包解压，打开超级命令-工具-refresh_token查询
-refreshtoken = 'eyJzaWduX3RpbWUiOiIyMDIyLTEyLTI1IDE5OjI1OjAxIn0=.eyJ1aWQiOiI2NjA1NzQ4MTYifQ==.770C980E4BFCAD438B549ADCFA5CF9AE6A9A2E2559F2E3174ADBF507C9A5D11E'
-getAccessTokenHeader = {"Content- Type": "application/json", "refresh_token": refreshtoken}
-getAccessTokenResponse = requests.post(url=getAccessTokenUrl, headers=getAccessTokenHeader)
-accessToken = json.loads(getAccessTokenResponse.content)['data']['access_token']
-print(accessToken)
-thsHeaders = {"Content-Type": "application/json", "access_token": accessToken}
+# # Token accessToken 及权限校验机制
+# getAccessTokenUrl = 'https://quantapi.51ifind.com/api/v1/get_access_token'
+# # 获取refresh_token需下载Windows版本接口包解压，打开超级命令-工具-refresh_token查询
+# refreshtoken = 'eyJzaWduX3RpbWUiOiIyMDIyLTEyLTI1IDE5OjI1OjAxIn0=.eyJ1aWQiOiI2NjA1NzQ4MTYifQ==.770C980E4BFCAD438B549ADCFA5CF9AE6A9A2E2559F2E3174ADBF507C9A5D11E'
+# getAccessTokenHeader = {"Content- Type": "application/json", "refresh_token": refreshtoken}
+# getAccessTokenResponse = requests.post(url=getAccessTokenUrl, headers=getAccessTokenHeader)
+# accessToken = json.loads(getAccessTokenResponse.content)['data']['access_token']
+# print(accessToken)
+# thsHeaders = {"Content-Type": "application/json", "access_token": accessToken}
 
 # 历史行情：获取历史的日频行情数据
 def history_quotes(cycle,code ="HC2305.SHF"):
