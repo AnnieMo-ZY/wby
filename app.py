@@ -24,7 +24,7 @@ st.set_page_config(page_title = '📈 AI Guided Trading System',layout = 'wide')
 
 
 ######
-import tushare
+import tushare as ts
 st.write('tushare版本' + ts.__version__)
 ######
 # WINDOW_SIZE = 10
