@@ -1,11 +1,10 @@
 import streamlit as st
-import yfinance as yf
 import numpy as np
 import pandas as pd
 import warnings
 from tensorflow import keras
 warnings.filterwarnings('ignore')
-from datetime import date
+from datetime import datetime
 import pandas_ta as ta
 import time
 from keras.models import load_model
@@ -16,93 +15,72 @@ from streamlit_echarts import st_pyecharts
 import functions as F
 import requests
 import json
+import tushare as ts
 
 
 # pyechart tutorial
 #https://www.heywhale.com/mw/project/5eb7958f366f4d002d783d4a
 st.set_page_config(page_title = '📈 AI Guided Trading System',layout = 'wide')
 
-
-######
-import tushare as ts
-st.write('tushare版本' + ts.__version__)
-######
-# WINDOW_SIZE = 10
-# hide_streamlit_style = """
-#             <style>
-#             #MainMenu {visibility: hidden;}
-#             footer {visibility: hidden;}
-#             </style>
-#             """
-# st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-# st.markdown('# 📈AI Guided Financial Trading Dashboard')
-# st.markdown('#### 均线+K线图')
-# st.markdown('#### RNN(循环神经网络),对下一周期的最高价/最低价进行预测,以及预测进场时机')
-# st.markdown('##### >输入股票代号获取数据')
-# st.markdown('热卷2305代号: HC2305.SHF \n')
+pro = ts.pro_api('8800190d8a7e7403c41b4053294d5b289b41f7cd4f90acf81632790b')
 
 
-# ###########################################################################
-# # Token accessToken 及权限校验机制
-# getAccessTokenUrl = 'https://quantapi.51ifind.com/api/v1/get_access_token'
-# # 获取refresh_token需下载Windows版本接口包解压，打开超级命令-工具-refresh_token查询
-# refreshtoken = 'eyJzaWduX3RpbWUiOiIyMDIyLTEyLTI1IDE5OjI1OjAxIn0=.eyJ1aWQiOiI2NjA1NzQ4MTYifQ==.770C980E4BFCAD438B549ADCFA5CF9AE6A9A2E2559F2E3174ADBF507C9A5D11E'
-# getAccessTokenHeader = {"Content- Type": "application/json", "refresh_token": refreshtoken}
-# getAccessTokenResponse = requests.post(url=getAccessTokenUrl, headers=getAccessTokenHeader)
-# accessToken = json.loads(getAccessTokenResponse.content)['data']['access_token']
-# thsHeaders = {"Content-Type": "application/json", "access_token": accessToken}
-# ###########################################################################
-
-# ###########################################################################
-# # handle data input / select perfer stock 
-# # STOCK = yf.Ticker('XPEV')
-# # if stock_name:
-# #     STOCK = yf.Ticker(stock_name)
-# # data = STOCK.history(interval = "15m")
-# # data['Datetime'] = data.index
-# # data['Datetime'] = data['Datetime'].astype(str)
-# ########################################################################
-# stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: 同花顺',value = 'HC2305.SHF')
-# cycle_select = st.radio('周期选择', options = ['30分钟','1小时','1天'],horizontal=True)
-# tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
-
-# with tab0:
-#     if cycle_select == '1天':
-#         data = F.history_quotes(cycle_select,stock_name)
-#         data = F.pre_process(data,WINDOW_SIZE)
-#     elif cycle_select == '1小时':
-#         data = F.history_quotes(cycle_select,stock_name)
-#         data = F.pre_process(data,WINDOW_SIZE) 
-#     elif cycle_select == '30分钟':
-#         data = F.history_quotes(cycle_select,stock_name)
-#         data = F.pre_process(data,WINDOW_SIZE)        
-#     st.dataframe(data, height=600,use_container_width = True)
-
-# with tab1:
-#     refresh = st.button('刷新K线图')
-#     if refresh:
-#         overlap_kline_line = F.draw_Kline(data,stock_name,cycle_select)
-#         # K线图 Echart
-#         st_pyecharts(overlap_kline_line,width="100%", height='900px')
-
-# with tab2:
-#     col1, col2, col3, col4 = st.columns(4)
-#     col1.metric(" 开盘价", str(data.Open.values[-1])[0:7], str(data.Open.values[-1] -data.Open.values[-2])[0:7])
-#     col2.metric(" 收盘价", str(data.Close.values[-1])[0:7],  str(data.Close.values[-1] -data.Close.values[-2])[0:7])
-#     col3.metric(" 最高价", str(data.High.values[-1])[0:7], str(data.High.values[-1] -data.High.values[-2])[0:7])
-#     col4.metric(" 最低价", str(data.Low.values[-1])[0:7], str(data.Low.values[-1] -data.Low.values[-2])[0:7])
-#     col1.metric(" 交易量", str(data.volume.values[-1])[0:7], str(data.volume.values[-1] - data.volume.values[-2])[0:7])
+WINDOW_SIZE = 10
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+st.markdown('# 📈AI Guided Financial Trading Dashboard')
+st.markdown('#### 检测Long Term Moving Average(长期移动均线)与Short Term Moving Average(短期移动均线)')
+st.markdown('#### RNN(循环神经网络),对下一时刻的最高价/最低价进行预测,以及预测进场时机')
+st.markdown('##### >输入股票代号获取数据') 
 
 
-#     # col2.metric(" WR25", str(data.wr25.values[-2])[0:7],  str(data.wr25.values[-1] - data.wr25.values[-2])[0:7])
-#     # col3.metric(" ATR25", str(data.atr25.values[-2])[0:7], str(data.atr15.values[-1] -data.atr25.values[-2])[0:7])
-#     # col4.metric(" SMA25", str(data.sma25.values[-2])[0:7], str(data.sma15.values[-1] -data.sma25.values[-2])[0:7])
-#     st.markdown('<div> <hr> </div>',unsafe_allow_html=True)
-#     col1, col2, col3, col4 = st.columns(4)
-#     col1.metric(" RSI15", str(data.RSI_15.values[-2])[0:7], str(data.RSI_15.values[-2] - data.RSI_15.values[-3])[0:7])
-#     col2.metric(" WR15", str(data.wr15.values[-2])[0:7],  str(data.wr15.values[-2] - data.wr15.values[-3])[0:7])
-#     col3.metric(" ATR15", str(data.atr15.values[-2])[0:7], str(data.atr15.values[-2] -data.atr15.values[-3])[0:7])
-#     col4.metric( " SMA15", str(data.sma15.values[-2])[0:7], str(data.sma15.values[-2] -data.sma15.values[-3])[0:7])
+stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: 同花顺',value = 'HC2305.SHF')
+cycle_select = st.radio('周期选择', options = ['30分钟','1小时','1天'],horizontal=True)
+
+
+data = pro.fut_daily(ts_code='HC2305.SHF',asset='FT', start_date='20220801', end_date='20230202')
+data = F.rename_dataframe(data)
+
+
+tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
+with tab0:
+    if cycle_select == '1天':
+        
+        data = F.pre_process(data,WINDOW_SIZE)
+    elif cycle_select == '1小时':
+        
+        data = F.pre_process(data,WINDOW_SIZE) 
+    elif cycle_select == '30分钟':
+        
+        data = F.pre_process(data,WINDOW_SIZE)        
+    st.dataframe(data, height=600,use_container_width = True)
+
+with tab1:
+    refresh = st.button('刷新K线图')
+    if refresh:
+        overlap_kline_line = F.draw_Kline(data,stock_name,cycle_select)
+        # K线图 Echart
+        st_pyecharts(overlap_kline_line,width="100%", height='900%')
+
+with tab2:
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric(" 开盘价", str(data.Open.values[-1])[0:7], str(data.Open.values[-1] -data.Open.values[-2])[0:7])
+    col2.metric(" 收盘价", str(data.Close.values[-1])[0:7],  str(data.Close.values[-1] -data.Close.values[-2])[0:7])
+    col3.metric(" 最高价", str(data.High.values[-1])[0:7], str(data.High.values[-1] -data.High.values[-2])[0:7])
+    col4.metric(" 最低价", str(data.Low.values[-1])[0:7], str(data.Low.values[-1] -data.Low.values[-2])[0:7])
+    col1.metric(" 交易量", str(data.volume.values[-1])[0:7], str(data.volume.values[-1] - data.volume.values[-2])[0:7])
+
+    st.markdown('<div> <hr> </div>',unsafe_allow_html=True)
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric(" RSI15", str(data.RSI_15.values[-2])[0:7], str(data.RSI_15.values[-2] - data.RSI_15.values[-3])[0:7])
+    col2.metric(" WR15", str(data.wr15.values[-2])[0:7],  str(data.wr15.values[-2] - data.wr15.values[-3])[0:7])
+    col3.metric(" ATR15", str(data.atr15.values[-2])[0:7], str(data.atr15.values[-2] -data.atr15.values[-3])[0:7])
+    col4.metric( " SMA15", str(data.sma15.values[-2])[0:7], str(data.sma15.values[-2] -data.sma15.values[-3])[0:7])
 
 # with tab3:
     
