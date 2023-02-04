@@ -1,5 +1,4 @@
 import streamlit as st
-import yfinance as yf
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -8,20 +7,18 @@ from tensorflow import keras
 warnings.filterwarnings('ignore')
 from datetime import datetime
 import pandas_ta as ta
-# from plotly.subplots import make_subplots
-# import plotly.graph_objects as go
 from sklearn.preprocessing import MinMaxScaler
 # new
 from pyecharts.charts import *
 from pyecharts import options as opts
 from streamlit_echarts import st_pyecharts
-# from iFinDPy import *
 import requests
 import json
 
 def rename_dataframe(data):
     data.rename(columns={'close' : 'Close', 'open':'Open' , 'high' : 'High' , 'low':'Low','vol':'volume'},errors='raise',inplace=True)
     data['Datetime'] = data.trade_date
+    data = data.iloc[::-1]
     return data
 
 def get_wr(high, low, close, lookback):
@@ -64,9 +61,9 @@ def pre_process(data,window_size):
     data['wr15'] = get_wr(data['High'],data['Low'],data['Close'],15)
     data['wr25'] = get_wr(data['High'],data['Low'],data['Close'],25)
     data['wr35'] = get_wr(data['High'],data['Low'],data['Close'],35)
-    data['atr15'] = ta.atr(data.High,data.Low,data.Close,window=15,fillna=False)
-    data['atr25'] = ta.atr(data.High,data.Low,data.Close,window=25,fillna=False)
-    data['atr35'] = ta.atr(data.High,data.Low,data.Close,window=35,fillna=False)
+    data['atr15'] = ta.atr(data.High,data.Low,data.Close,window=15,fillna=0)
+    data['atr25'] = ta.atr(data.High,data.Low,data.Close,window=25,fillna=0)
+    data['atr35'] = ta.atr(data.High,data.Low,data.Close,window=35,fillna=0)
     data['sma15'] = data['Close'].rolling(15).mean()
     data['sma25'] = data['Close'].rolling(25).mean()
     data['sma35'] = data['Close'].rolling(35).mean()
@@ -305,7 +302,7 @@ def generate_sequence(data, window_size):
     data.reset_index(inplace = True,drop = True)
 
     for index, row in data.iterrows(): 
-        # if index <= len(data)- window_size:
+        if index <= len(data)- window_size:
             # OHLC numerical original data
             train_dt_ori.append(data.loc[index:window_size-1+index, ['Open', 'High', 'Low', 'Close']].values)
             # GRYP Categorical
@@ -345,7 +342,7 @@ def generate_sequence(data, window_size):
     y = np.array(y).astype('int64')
     bb_event = np.array(bb_event).astype('float32')
     train_arr_distance = np.array(train_dt_distance).astype('float32')
-    ta_indicators =  np.array(ta_indicators).astype('float32')
+    ta_indicators =  np.array(ta_indicators).astype('float64')
 
     # TrainSet Features
     train_x_dict = {
