@@ -11,151 +11,18 @@ import pandas_ta as ta
 # from plotly.subplots import make_subplots
 # import plotly.graph_objects as go
 from sklearn.preprocessing import MinMaxScaler
-# import os
 # new
 from pyecharts.charts import *
 from pyecharts import options as opts
 from streamlit_echarts import st_pyecharts
+# from iFinDPy import *
 import requests
 import json
-# import time
 
-# # Token accessToken 及权限校验机制
-# getAccessTokenUrl = 'https://quantapi.51ifind.com/api/v1/get_access_token'
-# # 获取refresh_token需下载Windows版本接口包解压，打开超级命令-工具-refresh_token查询
-# refreshtoken = 'eyJzaWduX3RpbWUiOiIyMDIyLTEyLTI1IDE5OjI1OjAxIn0=.eyJ1aWQiOiI2NjA1NzQ4MTYifQ==.770C980E4BFCAD438B549ADCFA5CF9AE6A9A2E2559F2E3174ADBF507C9A5D11E'
-# getAccessTokenHeader = {"Content- Type": "application/json", "refresh_token": refreshtoken}
-# getAccessTokenResponse = requests.post(url=getAccessTokenUrl, headers=getAccessTokenHeader)
-# accessToken = json.loads(getAccessTokenResponse.content)['data']['access_token']
-# print(accessToken)
-# thsHeaders = {"Content-Type": "application/json", "access_token": accessToken}
-
-# 历史行情：获取历史的日频行情数据
-def history_quotes(cycle,code ="HC2305.SHF"):
-    if cycle == '1天':
-        thsUrl = 'https://quantapi.51ifind.com/api/v1/cmd_history_quotation'
-        thsPara = {"codes":
-                    code,
-                "indicators":
-                    "open,high,low,close,volume",
-                "startdate":
-                    "2021-03-05",
-                "enddate":
-                    str(datetime.now().date()),
-                "functionpara":
-                    {"Fill": "Blank",
-                    'Interval':cycle}
-                }
-        thsResponse = requests.post(url=thsUrl, json=thsPara, headers=thsHeaders)
-        data = json.loads(thsResponse.content)
-        result = Trans2df(data)
-        result['Datetime'] = result.time
-        result.rename(columns={'table.close' : 'Close', 'table.open':'Open' , 'table.high' : 'High' , 'table.low':'Low','table.volume':'volume'},
-                                errors='raise',inplace=True)
-        return result
-
-    elif cycle == '1小时':
-        thsUrl = 'https://quantapi.51ifind.com/api/v1/high_frequency'
-        thsPara = {"codes":
-                    code,
-                "indicators":
-                    "open,high,low,close,volume",
-                "starttime":
-                    "2022-12-01 09:15:00",
-                "endtime":
-                    str(datetime.now().date())+' 24:00:00',
-                    "functionpara":
-                    {"Fill": "Blank",
-                    'Interval':60}}
-        thsResponse = requests.post(url=thsUrl, json=thsPara, headers=thsHeaders)
-        data = json.loads(thsResponse.content)
-        result = Trans2df(data)
-        result['Datetime'] = result.time
-        result.rename(columns={'table.close' : 'Close', 'table.open':'Open' , 'table.high' : 'High' , 'table.low':'Low','table.volume':'volume'},
-                                errors='raise',inplace=True)
-        # print(result)
-        # print(thsResponse.content)
-        return result
-    elif cycle == '30分钟':
-        thsUrl = 'https://quantapi.51ifind.com/api/v1/high_frequency'
-        thsPara = {"codes":
-                    code,
-                "indicators":
-                    "open,high,low,close,volume",
-                "starttime":
-                    "2022-12-01 09:15:00",
-                "endtime":
-                    str(datetime.now().date())+' 24:00:00',
-                    "functionpara":
-                    {"Fill": "Blank",
-                    'Interval':30}}
-        thsResponse = requests.post(url=thsUrl, json=thsPara, headers=thsHeaders)
-        data = json.loads(thsResponse.content)
-        result = Trans2df(data)
-        result['Datetime'] = result.time
-        result.rename(columns={'table.close' : 'Close', 'table.open':'Open' , 'table.high' : 'High' , 'table.low':'Low','table.volume':'volume'},
-                                errors='raise',inplace=True)
-        # print(result)
-        # print(thsResponse.content)
-        return result
-
-
-# 实时行情：循环获取最新行情数据
-def real_time(code = "HC2305.SHF"):
-    thsUrl = 'https://quantapi.51ifind.com/api/v1/real_time_quotation'
-    thsPara = {"codes": code, "indicators": "latest"}
-    # while True:
-    thsResponse = requests.post(url=thsUrl, json=thsPara, headers=thsHeaders)
-    data = json.loads(thsResponse.content)
-    result = pd.json_normalize(data['tables'])
-    result = result.drop(columns=['pricetype'])
-    result = result.apply(lambda x: x.explode().astype(str).groupby(level=0).agg(", ".join))
-    print(result)
-    st.table(result)
-    # do your thing here
-
-# json结构体转dataframe
-def Trans2df(data):
-    df = pd.json_normalize(data['tables'])
-    df2 = df.set_index(['thscode'])
-
-    unnested_lst = []
-    for col in df2.columns:
-        unnested_lst.append(df2[col].apply(pd.Series).stack())
-
-    result = pd.concat(unnested_lst, axis=1, keys=df2.columns)
-    # result = result.reset_index(drop=True)
-    # 设置二级索引
-    result = result.reset_index()
-    result = result.set_index(['thscode', 'time'])
-    # 格式化,行转列
-    result = result.drop(columns=['level_1'])
-    result = result.reset_index()
-    return (result)
-
-
-def login():
-    login_info = THS_iFinDLogin('my3013','406919')
-    if login_info == 0:
-        st.write('登陆成功')
-        st.json(THS_DataStatistics())
-    else:
-        THS_iFinDLogout()
-        st.write('登陆失败')
-
-def handle_ifind_data(code = "HC2305.SHF"):
-    # "RB2305"
-    data_result = THS_HQ(code,'open;high;low;close;volume','','2019-01-01', str(datetime.now().date()))
-    if data_result.errorcode == 0:
-        data = data_result.data
-        data['Datetime'] = data.time
-        data.rename(columns={'close' : 'Close', 'open':'Open' , 'high' : 'High' , 'low':'Low'},errors='raise',inplace=True)
-        return data
-    else:
-        print(data_result.errmsg)
-        st.write(data_result.errmsg)
-
-
+def rename_dataframe(data):
+    data.rename(columns={'close' : 'Close', 'open':'Open' , 'high' : 'High' , 'low':'Low','vol':'volume'},errors='raise',inplace=True)
+    data['Datetime'] = data.trade_date
+    return data
 
 def get_wr(high, low, close, lookback):
     highh = high.rolling(lookback).max() 
@@ -169,7 +36,6 @@ def make_prediction(model,train_x_dict, price_scaler_min,price_scaler_max):
     return predicted_max,predicted_min,predicted_label
 
 def label_min_max(df, ws):
-    
     local_min = np.array([])
     local_max = np.array([])
     for i in (range(len(df)-ws)):
@@ -180,7 +46,6 @@ def label_min_max(df, ws):
         local_max = np.append(local_max, df.High.iloc[-ws:].max()) 
     df[f'min_{ws}']=local_min
     df[f'max_{ws}']=local_max
-    df.dropna(inplace=True)
     return df
 
 def pre_process(data,window_size):
@@ -213,8 +78,9 @@ def pre_process(data,window_size):
         GRYP_IDX[value] = idx
     data['event'].replace(GRYP_IDX, inplace= True)
     data = label_min_max(data,window_size)
-    data.replace({'' : 0}, inplace = True)
-    data.dropna(subset=['ratio top','RSI_35',f'min_{window_size}'],inplace=True)
+    data.replace({'': 0}, inplace = True)
+    data.fillna(0,inplace=True)
+    # data.dropna(subset=['ratio top','RSI_35',f'min_{window_size}'],inplace=True)
     return data
 
 # detect bb_event
@@ -439,7 +305,7 @@ def generate_sequence(data, window_size):
     data.reset_index(inplace = True,drop = True)
 
     for index, row in data.iterrows(): 
-        if index <= len(data)- window_size:
+        # if index <= len(data)- window_size:
             # OHLC numerical original data
             train_dt_ori.append(data.loc[index:window_size-1+index, ['Open', 'High', 'Low', 'Close']].values)
             # GRYP Categorical
@@ -500,106 +366,11 @@ def process_model_result(y_pred,price_scaler_min, price_scaler_max):
         predicted_max.append((y_pred[0][i] * (price_scaler_max[i] - price_scaler_min[i])) + price_scaler_min[i] )
         predicted_min.append((y_pred[1][i] * (price_scaler_max[i] - price_scaler_min[i])) + price_scaler_min[i] )
     predicted_label = y_pred[2].argmax(axis=-1).tolist()
-    st.markdown(f'***预测下一时刻最高价为: {predicted_max[-1][0]}***')
-    st.markdown(f'***预测下一时刻最低价为: {predicted_min[-1][0]}***')
-    st.markdown(f'***预测下一时刻进场时机: {LABEL_INDEX[predicted_label[-1]]}***')
+    st.markdown(f'***预测下一个周期最高价为: {predicted_max[-1][0]}***')
+    st.markdown(f'***预测下一个周期低价为: {predicted_min[-1][0]}***')
+    st.markdown(f'***预测下一个周期场时机: {LABEL_INDEX[predicted_label[-1]]}***')
     return predicted_max,predicted_min,predicted_label
     
-def stock_price_visualize(data,stock_name):
-    x = [i for i in range(data.shape[0])]
-
-    # moving average 200
-    MA200 = data['Close'].rolling(window =75).mean()
-    # moving average 100
-    MA100 = data['Close'].rolling(window =100).mean()
-    # moving average 14
-    MA14 = data['Close'].rolling(window =14).mean()
-
-    fig = go.Figure(data=[go.Candlestick(x=x,
-                    open=data['Open'],
-                    high=data['High'],
-                    low=data['Low'],
-                    close=data['Close'])])
-
-    # fig.layout = dict(xaxis=dict(type="category"))
-    fig.add_trace(go.Scatter(x=x, y= MA200, mode='lines', line=dict(width = 1.5),marker_color = 'red',
-                            showlegend=True, name = '长均线'))
-
-    fig.add_trace(go.Scatter(x=x, y= MA100, mode='lines', line=dict(width = 1.5),marker_color = 'green', 
-                            showlegend=True, name = '中均线'))
-
-    fig.add_trace(go.Scatter(x=x, y= MA14,mode='lines', line=dict(width = 1.5),marker_color = 'yellow',
-                            showlegend=True, name = '短均线'))
-
-    layout = go.Layout(
-        title = f'{stock_name}-K线图走势',
-        plot_bgcolor='#efefef',
-        # Font Families
-        font_family='Monospace',
-        font_color='#000000',
-        font_size=18,
-        xaxis=dict(
-            rangeslider=dict(
-                visible=False
-            )
-        )
-    )
-    fig.update_layout(layout)
-
-    # fig.show()
-    return fig
-
-# def RSI_plot(data):
-
-#     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_width=[0.25, 0.75])
-#     x = [i for i in range(data.shape[0])]
-#     fig.add_trace(go.Candlestick(
-#         x=x,
-#         open=data['Open'],
-#         high=data['High'],
-#         low=data['Low'],
-#         close=data['Close'],
-#         increasing_line_color='#ff9900',
-#         decreasing_line_color='black',
-#         showlegend=False
-#     ))
-
-#     # Make RSI Plot
-#     fig.add_trace(go.Scatter(
-#         x=x,
-#         y=data['RSI_15'],
-#         line=dict(color='#ff9900', width=2),
-#         showlegend=False,
-#     ), row=2, col=1
-#     )
-#     # Add upper/lower bounds
-#     fig.update_yaxes(range=[-10, 110], row=2, col=1)
-#     fig.add_hline(y=0, col=1, row=2, line_color="#666", line_width=2)
-#     fig.add_hline(y=100, col=1, row=2, line_color="#666", line_width=2)
-
-#     # Add overbought/oversold
-#     fig.add_hline(y=30, col=1, row=2, line_color='#336699', line_width=2, line_dash='dash')
-#     fig.add_hline(y=70, col=1, row=2, line_color='#336699', line_width=2, line_dash='dash')
-
-#     # Customize font, colors, hide range slider
-#     layout = go.Layout(
-#         title = 'RSI15交易策略',
-#         plot_bgcolor='#efefef',
-#         # Font Families
-#         font_family='Monospace',
-#         font_color='#000000',
-#         font_size=18,
-#         xaxis=dict(
-#             rangeslider=dict(
-#                 visible=False
-#             )
-#         )
-#     )
-#     fig.update_layout(layout)
-#     # update and display
-#     fig.update_layout(layout)
-#     # fig.show()
-#     return fig
 
 def label_to_marker(data,predicted_label):
     marker_ls = []
@@ -646,7 +417,7 @@ def draw_Kline(data,stock_name,cycle_select):
             )
 
 
-    g = (Kline(init_opts=opts.InitOpts(width="900px", height='500px'))
+    g = (Kline(init_opts=opts.InitOpts(width="900%", height='500%'))
             .add_xaxis(data['Datetime'].tolist()) 
             
             #y轴数据，默认open、close、low、high，转为list格式
@@ -665,7 +436,7 @@ def draw_Kline(data,stock_name,cycle_select):
             #标题
             title_opts =opts.TitleOpts(title = f'{stock_name} K线图',
             #副标题
-            subtitle ='周期:'+cycle_select,pos_left = 'left',
+            subtitle = cycle_select,pos_left = 'left',
             title_textstyle_opts = opts.TextStyleOpts(font_size=35),
             subtitle_textstyle_opts = opts.TextStyleOpts(font_size=28),),
             # 图例
