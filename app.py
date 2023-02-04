@@ -58,13 +58,6 @@ with tab1:
         # K线图 Echart
         st_pyecharts(overlap_kline_line,width="100%", height='900%')
 
-with tab1:
-    refresh = st.button('刷新K线图')
-    if refresh:
-        overlap_kline_line = F.draw_Kline(data,stock_name,cycle_select)
-        # K线图 Echart
-        st_pyecharts(overlap_kline_line,width="100%", height='900%')
-
 with tab2:
     st.write('数据日期截止到:{}'.format(data.Datetime[0]))
     col1, col2, col3, col4 = st.columns(4)
@@ -73,12 +66,10 @@ with tab2:
     col3.metric(" 最高价", str(data.High.values[0]), str(data.High.values[0] -data.High.values[1]))
     col4.metric(" 最低价", str(data.Low.values[0]), str(data.Low.values[0] -data.Low.values[1]))
     col1.metric(" 交易量", str(data.volume.values[0]), str(data.volume.values[0] - data.volume.values[1]))
-
     st.markdown('<div> <hr> </div>',unsafe_allow_html=True)
-    col1, col2, col3, col4 = st.columns(4)
 
 with tab3:
-    
+   
     st.markdown('### 模型特征: ')
     st.dataframe(data)
     LABEL_MODEL = st.button('RNN模型预测')
