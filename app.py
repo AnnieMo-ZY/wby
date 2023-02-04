@@ -59,14 +59,17 @@ with tab1:
         st_pyecharts(overlap_kline_line,width="100%", height='900%')
 
 with tab2:
-    st.write('数据日期截止到:{}'.format(data.Datetime[-1]))
+    st.write('数据日期截止到:{}'.format(data.Datetime[0]))
     col1, col2, col3, col4 = st.columns(4)
+    st.write('对比前一天:')
     col1.metric(" 开盘价", str(data.Open.values[-1]), str(data.Open.values[-1] -data.Open.values[-2]))
     col2.metric(" 收盘价", str(data.Close.values[-1]),  str(data.Close.values[-1] -data.Close.values[-2]))
     col3.metric(" 最高价", str(data.High.values[-1]), str(data.High.values[-1] -data.High.values[-2]))
     col4.metric(" 最低价", str(data.Low.values[-1]), str(data.Low.values[-1] -data.Low.values[-2]))
     col1.metric(" 交易量", str(data.volume.values[-1]), str(data.volume.values[-1] - data.volume.values[-2]))
+    st.markdown('<div> <hr> </div>',unsafe_allow_html=True)
 
+            
 with tab3:
     st.markdown('### 模型特征: ')
     st.dataframe(data)
