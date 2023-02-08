@@ -47,11 +47,7 @@ st.markdown('##### >输入股票代号获取数据')
 stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: 同花顺',value = 'HC2305.SHF')
 cycle_select = st.radio('选择', options = ['股票','期货'],horizontal=True)
 
-if cycle_select == '期货':
-    data = pro.fut_daily(ts_code= stock_name, asset='FT', start_date='20220801', end_date='20230202')
-if cycle_select == '股票':
-    data = pro.fut_daily(ts_code= stock_name, asset='E', start_date='20220801', end_date='20230202')
-    
+data = pro.fut_daily(ts_code= stock_name, asset='FT', start_date='20220801', end_date='20230202',retry_count=3,pause =2)
 data = F.rename_dataframe(data)
 data = F.pre_process(data,WINDOW_SIZE)
 
