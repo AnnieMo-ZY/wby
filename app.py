@@ -24,6 +24,11 @@ st.set_page_config(page_title = '📈 AI Guided Trading System',layout = 'wide')
 
 pro = ts.pro_api('8800190d8a7e7403c41b4053294d5b289b41f7cd4f90acf81632790b')
 
+requests.DEFAULT_RETRIES = 5
+
+s = requests.session()
+s.keep_alive = False
+
 
 WINDOW_SIZE = 10
 hide_streamlit_style = """
@@ -40,11 +45,17 @@ st.markdown('##### >输入股票代号获取数据')
 
 
 stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: 同花顺',value = 'HC2305.SHF')
-cycle_select = st.radio('周期选择', options = ['30分钟','1小时','1天'],horizontal=True)
+cycle_select = st.radio('选择', options = ['股票','期货'],horizontal=True)
 
-data = pro.fut_daily(ts_code='HC2305.SHF',asset='FT', start_date='20220801', end_date='20230202')
+if cycle_select == '期货':
+    data = pro.fut_daily(ts_code= stock_name, asset='FT', start_date='20220801', end_date='20230202')
+if cycle_select == '股票':
+    data = pro.fut_daily(ts_code= stock_name, asset='E', start_date='20220801', end_date='20230202')
+    
 data = F.rename_dataframe(data)
 data = F.pre_process(data,WINDOW_SIZE)
+
+
 
 
 tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
