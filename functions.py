@@ -82,7 +82,7 @@ def label_min_max(df, ws):
     return df
 
 def pre_process(data,window_size):
-    data.reset_index(inplace = True)
+#     data.reset_index(inplace = True)
     # calculate sma
     data['sma'] = data['Close'].rolling(20).mean()
     # calculate standard deviation
