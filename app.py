@@ -8,7 +8,7 @@ from datetime import datetime
 import pandas_ta as ta
 import time
 from keras.models import load_model
-# new
+
 from pyecharts.charts import *
 from pyecharts import options as opts
 from streamlit_echarts import st_pyecharts
@@ -16,6 +16,7 @@ import functions as F
 import requests
 import json
 import tushare as ts
+
 
 
 # pyechart tutorial
@@ -47,7 +48,11 @@ st.markdown('##### >输入股票代号获取数据')
 stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: 同花顺',value = 'HC2305.SHF')
 cycle_select = st.radio('选择', options = ['股票','期货'],horizontal=True)
 
-data = pro.fut_daily(ts_code= stock_name, asset='FT', start_date='20220801', end_date='20230202',retry_count=3,pause =2)
+if cycle_select == '期货':
+    data = pro.fut_daily(ts_code= stock_name, asset='FT', start_date='20220801', end_date=datetime.now().strftime('%Y%m%d'))
+if cycle_select == '股票':
+    data = pro.fut_daily(ts_code= stock_name, asset='E', start_date='20220801', end_date=datetime.now().strftime('%Y%m%d'))
+            
 data = F.rename_dataframe(data)
 data = F.pre_process(data,WINDOW_SIZE)
 
