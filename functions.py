@@ -1,19 +1,55 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
 import warnings
 from tensorflow import keras
 warnings.filterwarnings('ignore')
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas_ta as ta
 from sklearn.preprocessing import MinMaxScaler
 # new
 from pyecharts.charts import *
 from pyecharts import options as opts
 from streamlit_echarts import st_pyecharts
-import requests
-import json
+import tushare as ts
+pro = ts.pro_api('8800190d8a7e7403c41b4053294d5b289b41f7cd4f90acf81632790b')
+
+def long_volume(stock_name):
+    yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y%m%d")
+    df = pro.fut_holding(symbol=stock_name.split('.')[0],trade_date = yesterday)
+    df.fillna(0,inplace=True)
+    df.sort_values(by='long_hld',ascending=False,inplace=True)
+    df2 = df.copy()
+    df2.sort_values(by='short_hld',ascending=False,inplace=True)
+    long = (
+        Bar(
+            init_opts=opts.InitOpts()
+        )
+        .add_xaxis(list(df['broker']))
+        .add_yaxis("多头持仓量", list(df.long_hld.values),itemstyle_opts=opts.ItemStyleOpts(color='rgb(205,51,0)'))
+        # .add_yaxis("空头持仓量", list(df.short_hld.values))
+        .set_global_opts(
+            title_opts=opts.TitleOpts(
+                title="{} 多头持仓排名".format(stock_name),
+                title_textstyle_opts=opts.TextStyleOpts(color="black"),
+            )
+        )
+    )
+    short =  (
+        Bar(
+            init_opts=opts.InitOpts()
+        )
+        .add_xaxis(list(df2['broker']))
+        # .add_yaxis("多头持仓量", list(df.long_hld.values))
+        .add_yaxis("空头持仓量", list(df2.short_hld.values),itemstyle_opts=opts.ItemStyleOpts(color='rgb(69,139,116)'))
+        .set_global_opts(
+            title_opts=opts.TitleOpts(
+                title="{} 空头持仓排名".format(stock_name),
+                title_textstyle_opts=opts.TextStyleOpts(color="black"),
+            )
+        )
+    )
+    return long,short
 
 def rename_dataframe(data):
     data.rename(columns={'close' : 'Close', 'open':'Open' , 'high' : 'High' , 'low':'Low','vol':'volume'},errors='raise',inplace=True)
@@ -152,8 +188,6 @@ def event(df,high,low, lower_band, upper_band, middle_band,l):
             return 0
     df['bb_event8'] = df.apply(lambda l: event_8(high,low, middle_band,l.name), axis=1)
     
-
-
 
 def compare(Close,Red,Green,Yellow):
 
