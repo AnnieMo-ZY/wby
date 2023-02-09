@@ -57,8 +57,6 @@ data = F.rename_dataframe(data)
 data = F.pre_process(data,WINDOW_SIZE)
 
 
-
-
 tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
 with tab0:
     st.dataframe(data, height=600,use_container_width = True)
@@ -71,9 +69,9 @@ with tab1:
         st_pyecharts(overlap_kline_line,width="100%", height='900%')
 
 with tab2:
-    st.write('数据日期截止到:{}'.format(data.Datetime[0]))
+    st.write('数据日期截止到:{}'.format(data.Datetime[len(data)-1]))
     col1, col2, col3, col4 = st.columns(4)
-    st.write('对比前一天:')
+
     col1.metric(" 开盘价", str(data.Open.values[-1]), str(data.Open.values[-1] -data.Open.values[-2]))
     col2.metric(" 收盘价", str(data.Close.values[-1]),  str(data.Close.values[-1] -data.Close.values[-2]))
     col3.metric(" 最高价", str(data.High.values[-1]), str(data.High.values[-1] -data.High.values[-2]))
