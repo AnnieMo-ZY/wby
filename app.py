@@ -4,17 +4,13 @@ import pandas as pd
 import warnings
 from tensorflow import keras
 warnings.filterwarnings('ignore')
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas_ta as ta
-import time
 from keras.models import load_model
-
 from pyecharts.charts import *
 from pyecharts import options as opts
 from streamlit_echarts import st_pyecharts
 import functions as F
-import requests
-import json
 import tushare as ts
 
 # pyechart tutorial
