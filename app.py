@@ -17,18 +17,10 @@ import requests
 import json
 import tushare as ts
 
-
-
 # pyechart tutorial
 #https://www.heywhale.com/mw/project/5eb7958f366f4d002d783d4a
 st.set_page_config(page_title = '📈 AI Guided Trading System',layout = 'wide')
-
 pro = ts.pro_api('8800190d8a7e7403c41b4053294d5b289b41f7cd4f90acf81632790b')
-
-requests.DEFAULT_RETRIES = 5
-
-s = requests.session()
-s.keep_alive = False
 
 
 WINDOW_SIZE = 10
@@ -45,33 +37,36 @@ st.markdown('#### RNN(循环神经网络),对下一时刻的最高价/最低价�
 st.markdown('##### >输入股票代号获取数据') 
 
 
-stock_name = st.text_input('输入股票代号: ' , help = '查阅股票代号: 同花顺',value = 'HC2305.SHF')
-cycle_select = st.radio('选择', options = ['股票','期货'],horizontal=True)
+stock_name = st.text_input('输入股票代号: ' , help = '格式：股票代号.交易所代号',value = 'HC2305.SHF')
+future_stock_select = st.radio('选择', options = ['股票','期货'],horizontal=True)
 
-if cycle_select == '期货':
+if future_stock_select == '期货':
     data = pro.fut_daily(ts_code= stock_name, asset='FT', start_date='20220801', end_date=datetime.now().strftime('%Y%m%d'))
-if cycle_select == '股票':
+if future_stock_select == '股票':
     data = pro.fut_daily(ts_code= stock_name, asset='E', start_date='20220801', end_date=datetime.now().strftime('%Y%m%d'))
-            
+    
 data = F.rename_dataframe(data)
 data = F.pre_process(data,WINDOW_SIZE)
 
-
 tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
+
 with tab0:
-    st.dataframe(data, height=600,use_container_width = True)
+    st.markdown('多头持仓量:')
+    long_volume,short_volume = F.long_volume(stock_name)
+    st_pyecharts(long_volume,width="100%", height='400%')
+    st_pyecharts(short_volume,width="100%", height='400%')
 
 with tab1:
     refresh = st.button('刷新K线图')
     if refresh:
-        overlap_kline_line = F.draw_Kline(data,stock_name,cycle_select)
+        overlap_kline_line = F.draw_Kline(data,stock_name,future_stock_select)
         # K线图 Echart
         st_pyecharts(overlap_kline_line,width="100%", height='900%')
 
 with tab2:
     st.write('数据日期截止到:{}'.format(data.Datetime[len(data)-1]))
     col1, col2, col3, col4 = st.columns(4)
-
+    st.write('对比前一天:')
     col1.metric(" 开盘价", str(data.Open.values[-1]), str(data.Open.values[-1] -data.Open.values[-2]))
     col2.metric(" 收盘价", str(data.Close.values[-1]),  str(data.Close.values[-1] -data.Close.values[-2]))
     col3.metric(" 最高价", str(data.High.values[-1]), str(data.High.values[-1] -data.High.values[-2]))
@@ -79,7 +74,11 @@ with tab2:
     col1.metric(" 交易量", str(data.volume.values[-1]), str(data.volume.values[-1] - data.volume.values[-2]))
     st.markdown('<div> <hr> </div>',unsafe_allow_html=True)
 
-            
+    # col1.metric(" RSI15", str(data.RSI_15.values[0]), str(data.RSI_15.values[0] - data.RSI_15.values[1]))
+    # col2.metric(" WR15", str(data.wr15.values[0]),  str(data.wr15.values[0] - data.wr15.values[1]))
+    # col3.metric(" ATR15", str(data.atr15.values[0]), str(data.atr15.values[0] -data.atr15.values[1]))
+    # col4.metric( " SMA15", str(data.sma15.values[0]), str(data.sma15.values[0] -data.sma15.values[1]))
+
 with tab3:
     st.markdown('### 模型特征: ')
     st.dataframe(data)
