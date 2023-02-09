@@ -34,7 +34,9 @@ st.markdown('##### >输入股票代号获取数据')
 
 
 stock_name = st.text_input('输入股票代号: ' , help = '格式：股票代号.交易所代号',value = 'HC2305.SHF')
-data = pro.fut_daily(ts_code= stock_name, asset='FT', start_date='20220801', end_date=datetime.now().strftime('%Y%m%d')) 
+future_stock_select = st.radio('选择', options = ['E:股票','FT:期货'],horizontal=True,index=1)
+
+data = pro.fut_daily(ts_code= stock_name, asset=future_stock_select.split(':')[0], start_date='20220801', end_date=datetime.now().strftime('%Y%m%d'))
 data = F.rename_dataframe(data)
 data = F.pre_process(data,WINDOW_SIZE)
 
@@ -70,8 +72,7 @@ with tab2:
     # col4.metric( " SMA15", str(data.sma15.values[0]), str(data.sma15.values[0] -data.sma15.values[1]))
 
 with tab3:
-    st.markdown('### 模型特征: ')
-    st.dataframe(data)
+    st.markdown('### 点击进行模型预测: ')
     LABEL_MODEL = st.button('RNN模型预测')
 
     # file path "//app//wby//RNN.h5"
