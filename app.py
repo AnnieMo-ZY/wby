@@ -34,7 +34,7 @@ st.markdown('##### >输入股票代号获取数据')
 
 
 stock_name = st.text_input('输入股票代号: ' , help = '格式：股票代号.交易所代号',value = 'HC2305.SHF')
-data = pro.fut_daily(ts_code= 'HC2305.SHF', asset='FT', start_date='20220801', end_date=datetime.now().strftime('%Y%m%d')) 
+data = pro.fut_daily(ts_code= stock_name, asset='FT', start_date='20220801', end_date=datetime.now().strftime('%Y%m%d')) 
 data = F.rename_dataframe(data)
 data = F.pre_process(data,WINDOW_SIZE)
 
