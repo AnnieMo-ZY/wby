@@ -121,7 +121,7 @@ with tab3:
                 .set_global_opts(
                 #标题
                 title_opts =opts.TitleOpts(title = f'{stock_name} K线图',
-                subtitle = cycle_select,pos_left = 'left',title_textstyle_opts = opts.TextStyleOpts(font_size=28)),
+                subtitle = future_stock_select ,pos_left = 'left',title_textstyle_opts = opts.TextStyleOpts(font_size=28)),
                 # 图例
                 legend_opts=opts.LegendOpts(
                     is_show=False, pos_bottom=10, pos_left="center"),
