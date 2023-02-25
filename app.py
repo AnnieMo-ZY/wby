@@ -39,6 +39,8 @@ future_stock_select = st.radio('选择', options = ['E:股票','FT:期货'],hori
 data = pro.fut_daily(ts_code= stock_name, asset=future_stock_select.split(':')[0], start_date='20220801', end_date=datetime.now().strftime('%Y%m%d'))
 data = F.rename_dataframe(data)
 data = F.pre_process(data,WINDOW_SIZE)
+with st.expander('源数据'):
+    data
 
 tab0, tab1, tab2, tab3= st.tabs(['数据','K线图', '技术指标','预测模型'])
 
